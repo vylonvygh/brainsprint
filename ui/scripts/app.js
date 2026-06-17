@@ -7,19 +7,35 @@ if (!invoke) {
 }
 
 // ========== Window Controls ==========
-document.getElementById('minimize-btn').addEventListener('click', () => {
-  invoke?.('minimize_window');
+document.getElementById('minimize-btn').addEventListener('click', async () => {
+  if (invoke) {
+    try {
+      await invoke('minimize_window');
+    } catch (e) {
+      console.error('minimize failed:', e);
+    }
+  }
 });
 
 document.getElementById('maximize-btn').addEventListener('click', async () => {
   if (invoke) {
-    const maximized = await invoke('toggle_maximize_window');
-    updateMaximizeIcon(maximized);
+    try {
+      const maximized = await invoke('toggle_maximize_window');
+      updateMaximizeIcon(maximized);
+    } catch (e) {
+      console.error('maximize failed:', e);
+    }
   }
 });
 
-document.getElementById('close-btn').addEventListener('click', () => {
-  invoke?.('close_window');
+document.getElementById('close-btn').addEventListener('click', async () => {
+  if (invoke) {
+    try {
+      await invoke('close_window');
+    } catch (e) {
+      console.error('close failed:', e);
+    }
+  }
 });
 
 function updateMaximizeIcon(maximized) {
