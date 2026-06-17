@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Brain shape -->
+  <path d="M256 64 C160 64 80 128 80 208 C80 256 104 296 140 324 C132 348 128 376 128 400 C128 432 144 448 160 448 C176 448 188 436 196 416 C208 424 224 432 240 432 L256 432 L272 432 C288 432 304 424 316 416 C324 436 336 448 352 448 C368 448 384 432 384 400 C384 376 380 348 372 324 C408 296 432 256 432 208 C432 128 352 64 256 64Z"
+        fill="url(#brainGrad)"/>
+  <!-- Brain fissure (center line) -->
+  <path d="M256 80 L256 420" stroke="#1f1f23" stroke-width="3" fill="none" opacity="0.3"/>
+  <!-- Brain wrinkles left -->
+  <path d="M160 180 Q200 160 240 180" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <path d="M150 220 Q200 200 245 220" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <path d="M155 260 Q200 240 248 260" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <!-- Brain wrinkles right -->
+  <path d="M352 180 Q312 160 272 180" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <path d="M362 220 Q312 200 267 220" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <path d="M357 260 Q312 240 264 260" stroke="#6d28d9" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <!-- Lightning bolt (white) -->
+  <path d="M240 140 L220 260 L260 250 L248 340 L300 230 L258 240 Z"
+        fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
+  <!-- Yellow accent wisp/flame on lower-right -->
+  <path d="M340 380 Q360 360 370 340 Q378 360 372 380 Q368 400 350 410 Q340 400 340 380Z"
+        fill="#f59e0b" opacity="0.9"/>
+  <path d="M350 370 Q362 350 368 340 Q372 355 365 375 Q358 385 350 380Z"
+        fill="#fbbf24" opacity="0.7"/>
+</svg>

@@ -1,0 +1,22 @@
+[package]
+name = "brainsprint"
+version = "1.0.0"
+description = "A minimal writing sprint application for focused thinking and flow."
+authors = ["Andre Joseph"]
+edition = "2021"
+
+[lib]
+name = "brainsprint_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }

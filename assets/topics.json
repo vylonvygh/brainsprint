@@ -1,0 +1,10 @@
+[
+  { "id": "builtin-1", "name": "Life & Philosophy", "builtIn": true },
+  { "id": "builtin-2", "name": "Science & Technology", "builtIn": true },
+  { "id": "builtin-3", "name": "Creative Writing", "builtIn": true },
+  { "id": "builtin-4", "name": "Daily Reflections", "builtIn": true },
+  { "id": "builtin-5", "name": "Problem Solving", "builtIn": true },
+  { "id": "builtin-6", "name": "Learning & Memory", "builtIn": true },
+  { "id": "builtin-7", "name": "Goals & Productivity", "builtIn": true },
+  { "id": "builtin-8", "name": "Free Writing", "builtIn": true }
+]
