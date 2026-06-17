@@ -293,23 +293,25 @@
             <h2 class="setup-card-title">Creative Mode</h2>
             <p class="setup-card-desc">Write with a prompt. Beat the countdown.</p>
 
-            <div class="setup-prompt-card" id="creative-prompt-card">
-              <div class="setup-prompt-topic" id="creative-prompt-topic"></div>
-              <div class="setup-prompt-text" id="creative-prompt-text"></div>
-              <div class="setup-prompt-actions">
-                <button id="creative-new-prompt-btn" class="new-prompt-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                  New Prompt
-                </button>
-                <button id="creative-toggle-topic-btn" class="new-prompt-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  Hide Topic
-                </button>
+            <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <div class="setup-prompt-card" id="creative-prompt-card">
+                <div class="setup-prompt-topic" id="creative-prompt-topic"></div>
+                <div class="setup-prompt-text" id="creative-prompt-text"></div>
+                <div class="setup-prompt-actions">
+                  <button id="creative-new-prompt-btn" class="new-prompt-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    New Prompt
+                  </button>
+                </div>
               </div>
+              <button id="creative-toggle-topic-btn" class="new-prompt-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Hide Topic
+              </button>
             </div>
 
             <div class="setup-timer-bar">
-              <span class="setup-timer-label">Timer:</span>
+              <span class="setup-timer-label">Countdown:</span>
               <div class="setup-timer-options">
                 <button class="timer-opt" data-seconds="0">Off</button>
                 <button class="timer-opt" data-seconds="5">5m</button>
