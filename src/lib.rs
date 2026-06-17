@@ -10,7 +10,11 @@ pub fn run() {
         .setup(|_app| {
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![
+            commands::minimize_window,
+            commands::toggle_maximize_window,
+            commands::close_window,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
