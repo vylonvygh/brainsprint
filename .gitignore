@@ -1,0 +1,43 @@
+# Rust
+/target/
+**/target/
+Cargo.lock.bak
+
+# Tauri build output
+/src-tauri/target/
+/dist/
+/build/
+
+# Node (if any JS tooling is ever used)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment / secrets
+.env
+.env.local
+*.key
+*.pem
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local app data that should never be tracked
+# (these are runtime/user data paths, not project files,
+# but excluded here in case of local testing inside the repo dir)
+*.db
+*.sqlite
+*.sqlite3
+/local-test-data/
+
+# Logs
+*.log
