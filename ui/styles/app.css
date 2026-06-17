@@ -21,6 +21,13 @@
   color: var(--text-secondary);
 }
 
+.debug-status {
+  margin-left: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 #titlebar-center {
   flex: 1;
 }
@@ -720,6 +727,11 @@
   gap: 12px;
 }
 
+#sc-actions .btn-primary,
+#sc-actions .btn-secondary {
+  margin-top: 0;
+}
+
 .btn-secondary {
   padding: 10px 28px;
   border-radius: 9px;
@@ -764,6 +776,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+#leave-confirm-actions .btn-primary,
+#leave-confirm-actions .btn-secondary {
+  margin-top: 0;
 }
 
 /* ========== Hidden Utility ========== */

@@ -1,39 +1,62 @@
 // ========== Tauri IPC ==========
 const tauri = window.__TAURI__;
-const invoke = tauri?.core?.invoke || tauri?.invoke;
+const invoke = tauri?.invoke ?? tauri?.core?.invoke;
 
 if (!invoke) {
   console.warn('Tauri IPC not available — window controls will not work outside the Tauri shell');
 }
 
+// Debug: show __TAURI__ availability in the title bar
+const debugTauri = document.getElementById('debug-tauri-status');
+if (debugTauri) {
+  debugTauri.textContent = tauri ? 'IPC: ok' : 'IPC: no';
+  debugTauri.title = tauri ? 'Keys: ' + Object.keys(tauri).join(', ') : '__TAURI__ undefined';
+}
+
+// Helper: flash a button to confirm click registered
+function flashBtn(el) {
+  const orig = el.style.background;
+  el.style.background = 'var(--accent-purple)';
+  setTimeout(() => el.style.background = orig, 200);
+}
+
 // ========== Window Controls ==========
-document.getElementById('minimize-btn').addEventListener('click', async () => {
+document.getElementById('minimize-btn').addEventListener('click', async (e) => {
+  flashBtn(e.currentTarget);
   if (invoke) {
     try {
       await invoke('minimize_window');
-    } catch (e) {
-      console.error('minimize failed:', e);
+    } catch (err) {
+      console.error('minimize err:', err);
+      e.currentTarget.title = 'Error: ' + err;
     }
+  } else {
+    console.warn('invoke not available');
+    e.currentTarget.title = 'IPC unavailable';
   }
 });
 
-document.getElementById('maximize-btn').addEventListener('click', async () => {
+document.getElementById('maximize-btn').addEventListener('click', async (e) => {
+  flashBtn(e.currentTarget);
   if (invoke) {
     try {
       const maximized = await invoke('toggle_maximize_window');
       updateMaximizeIcon(maximized);
-    } catch (e) {
-      console.error('maximize failed:', e);
+    } catch (err) {
+      console.error('maximize err:', err);
+      e.currentTarget.title = 'Error: ' + err;
     }
   }
 });
 
-document.getElementById('close-btn').addEventListener('click', async () => {
+document.getElementById('close-btn').addEventListener('click', async (e) => {
+  flashBtn(e.currentTarget);
   if (invoke) {
     try {
       await invoke('close_window');
-    } catch (e) {
-      console.error('close failed:', e);
+    } catch (err) {
+      console.error('close err:', err);
+      e.currentTarget.title = 'Error: ' + err;
     }
   }
 });
@@ -57,9 +80,21 @@ navItems.forEach(item => {
       showLeaveConfirm();
       return;
     }
+
+    const viewId = item.dataset.view;
+
+    // Sprint and Practice nav items start a session directly
+    if (viewId === 'sprint') {
+      startSprint();
+      return;
+    }
+    if (viewId === 'practice') {
+      startPractice();
+      return;
+    }
+
     navItems.forEach(n => n.classList.remove('active'));
     item.classList.add('active');
-    const viewId = item.dataset.view;
     views.forEach(v => v.classList.remove('active'));
     const targetView = document.getElementById('view-' + viewId);
     if (targetView) {
@@ -285,6 +320,12 @@ document.getElementById('sc-save-btn').addEventListener('click', () => {
 
 // Start Sprint from Home
 document.querySelector('.start-sprint-btn').addEventListener('click', startSprint);
+
+// Practice Mode placeholder
+function startPractice() {
+  startSprint(); // Same as sprint for now — will differ in Milestone 4
+}
+document.querySelector('.start-practice-btn')?.addEventListener('click', startPractice);
 
 // ========== Startup ==========
 console.log('BrainSprint v1.0 — running in', document.documentElement.getAttribute('data-theme'), 'mode');
