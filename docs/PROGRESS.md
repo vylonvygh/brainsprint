@@ -5,7 +5,7 @@
 | Milestone | Status |
 |-----------|--------|
 | 1 — Project Skeleton | ✅ Done |
-| 2 — Home Screen | ❌ Not Started |
+| 2 — Home Screen | ✅ Done |
 | 3 — Sprint Mode | ❌ Not Started |
 | 4 — Practice Mode | ❌ Not Started |
 | 5 — Settings | ❌ Not Started |
@@ -48,6 +48,29 @@
 
 ---
 
-## Milestone 2 — Home Screen ❌
+## Milestone 2 — Home Screen ✅
 
-*Not yet started.*
+**What was built:**
+- Custom title bar with minimize/maximize/close buttons (via Tauri window API) and drag region
+- Persistent sidebar navigation with:
+  - Inline SVG logo (purple brain + lightning bolt + yellow wisp)
+  - "BrainSprint" wordmark + "v1.0" version tag
+  - 7 nav items with SVGs: Home (house), Sprint Mode (lightning), Practice Mode (pencil), Topics (book), Statistics (bar chart), Settings (gear), About (info)
+  - Active nav item highlighted with filled purple rounded background
+  - Bottom offline trust card with green lock icon ("100% Offline" / "Your data stays on your device.")
+- Home page content:
+  - "Welcome to BrainSprint" header with subtitle
+  - Theme toggle (moon → pill switch → sun) with system theme detection via `prefers-color-scheme`
+  - Two mode cards (Sprint Mode + Practice Mode) with circular purple badges, description lines, and Start buttons
+  - Personal Bests card (gold trophy icon) with 3 stats: Longest Session, Most Words, Highest WPM
+  - Lifetime Statistics card (bar chart icon) with 3 stats: Total Sessions, Total Words, Total Writing Time
+- View switching via sidebar nav (placeholder views for other screens)
+- Theme switching is instant with `data-theme` attribute on root element
+- System theme detection with listener for live changes
+
+**Notable decisions:**
+- Logo SVG is inlined in HTML to avoid file resolution issues with Tauri's asset serving (only `frontendDist` directory is served)
+- Used `decorations: false` with fully custom title bar as specified
+- Stat values are placeholder data — real persistence comes in Milestone 6
+- Theme persistence (saving user preference) will be wired to settings in Milestone 5
+- `window.__TAURI__` used for window controls API (minimize/maximize/close)
