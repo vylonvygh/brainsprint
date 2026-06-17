@@ -28,7 +28,8 @@
     "targets": "all",
     "icon": [
       "assets/logo.svg",
-      "assets/app-logo.png"
+      "assets/app-logo.png",
+      "assets/icon-512.png"
     ]
   }
 }

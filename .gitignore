@@ -44,3 +44,7 @@ Thumbs.db
 
 # Tauri auto-generated schema files
 /gen/
+
+#flatpak
+.flatpak-builder/
+build-dir/
