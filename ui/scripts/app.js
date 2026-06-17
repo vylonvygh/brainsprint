@@ -91,9 +91,9 @@ const navItems = document.querySelectorAll('.nav-item');
 const views = document.querySelectorAll('.view');
 
 function exitAllSetup() {
-  document.body.classList.remove('sprinting', 'topicking', 'practicing');
-  sprintView.classList.remove('active');
-  topicView.classList.remove('active');
+  document.body.classList.remove('surviving', 'creativing', 'practicing');
+  survivalView.classList.remove('active');
+  creativeView.classList.remove('active');
   practiceView.classList.remove('active');
 }
 
@@ -108,12 +108,12 @@ navItems.forEach(item => {
 
     exitAllSetup();
 
-    if (viewId === 'sprint') {
-      startSprint();
+    if (viewId === 'survival') {
+      startSurvival();
       return;
     }
-    if (viewId === 'topic') {
-      startTopic();
+    if (viewId === 'creative') {
+      startCreative();
       return;
     }
     if (viewId === 'practice') {
@@ -157,7 +157,7 @@ document.getElementById('theme-toggle-btn').addEventListener('click', toggleThem
 // ========== Session State ==========
 const session = {
   active: false,
-  mode: 'sprint',
+  mode: 'survival',
   startTime: null,
   timeoutMs: 5000,
   countdownTimer: null,
@@ -191,266 +191,323 @@ function showSessionComplete(time, words, wpm, chars) {
   document.getElementById('sc-stat-words').textContent = words.toLocaleString();
   document.getElementById('sc-stat-wpm').textContent = wpm;
   document.getElementById('sc-stat-chars').textContent = chars.toLocaleString();
+
+  const titleEl = document.getElementById('sc-title');
+  const subtitleEl = document.getElementById('sc-subtitle');
+  const saveBtn = document.getElementById('sc-save-btn');
+  const badge = document.getElementById('sc-badge');
+
+  if (session.mode === 'survival') {
+    titleEl.textContent = 'You Did Not Survive!';
+    subtitleEl.textContent = 'Your writing was lost. Keep practicing to survive longer!';
+    saveBtn.style.display = 'none';
+    badge.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  } else {
+    titleEl.textContent = 'Session Complete!';
+    subtitleEl.textContent = 'Great job! Keep pushing forward.';
+    saveBtn.style.display = '';
+    badge.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+
   document.getElementById('session-complete-overlay').classList.add('active');
 }
 
-// ========== Sprint Mode ==========
-const sprintView = document.getElementById('sprint-view');
-const textarea = document.getElementById('sprint-textarea');
-const sprintTimerEl = document.getElementById('sprint-timer');
-const sprintTimerSubEl = document.getElementById('sprint-timer-sub');
-const sprintProgressFill = document.getElementById('sprint-progress-fill');
-const sprintSetup = document.getElementById('sprint-setup');
-const sprintActive = document.getElementById('sprint-active');
-const sprintBeginBtn = document.getElementById('sprint-begin-btn');
-const statWords = document.getElementById('stat-words');
-const statChars = document.getElementById('stat-chars');
-const statWpm = document.getElementById('stat-wpm');
-const statTime = document.getElementById('stat-time');
+// ========== Survival Mode ==========
+const survivalView = document.getElementById('survival-view');
+const sTextarea = document.getElementById('survival-textarea');
+const survivalTimerEl = document.getElementById('survival-timer');
+const survivalTimerSubEl = document.getElementById('survival-timer-sub');
+const survivalProgressFill = document.getElementById('survival-progress-fill');
+const survivalSetup = document.getElementById('survival-setup');
+const survivalActive = document.getElementById('survival-active');
+const survivalBeginBtn = document.getElementById('survival-begin-btn');
+const sStatWords = document.getElementById('s-stat-words');
+const sStatChars = document.getElementById('s-stat-chars');
+const sStatWpm = document.getElementById('s-stat-wpm');
+const sStatTime = document.getElementById('s-stat-time');
+const sTopicEl = document.getElementById('survival-prompt-topic');
+const sPromptEl = document.getElementById('survival-prompt-text');
 
-let sprintTimeoutMs = 5000;
-let sprintCurrentMs = 5000;
+let survivalTimeoutMs = 5000;
+let survivalCurrentMs = 5000;
 
-function startSprint() {
-  session.mode = 'sprint';
+function startSurvival() {
+  pickFreshPrompt();
+  session.mode = 'survival';
   session.active = false;
 
-  textarea.value = '';
-  textarea.disabled = true;
-  sprintSetup.classList.remove('hidden');
-  sprintActive.classList.add('hidden');
+  sTextarea.value = '';
+  sTextarea.disabled = true;
+  survivalSetup.classList.remove('hidden');
+  survivalActive.classList.add('hidden');
+  sTopicEl.textContent = currentTopic || 'Free Writing';
+  sPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
 
-  document.body.classList.add('sprinting');
-  sprintView.classList.add('active');
+  document.body.classList.add('surviving');
+  survivalView.classList.add('active');
 }
 
-function beginSprintSession() {
+function beginSurvivalSession() {
   session.active = true;
   session.startTime = Date.now();
-  sprintTimeoutMs = 5000;
-  sprintCurrentMs = 5000;
+  survivalTimeoutMs = 5000;
+  survivalCurrentMs = 5000;
 
-  textarea.disabled = false;
-  sprintSetup.classList.add('hidden');
-  sprintActive.classList.remove('hidden');
+  sTextarea.disabled = false;
+  survivalSetup.classList.add('hidden');
+  survivalActive.classList.remove('hidden');
 
-  sprintTimerEl.textContent = '00:05';
-  sprintTimerSubEl.textContent = 'Keep writing...';
-  sprintProgressFill.style.width = '100%';
-  updateStatsDisplay(0, 0, 0, 0);
+  survivalTimerEl.textContent = '00:05';
+  survivalTimerSubEl.textContent = 'Keep writing...';
+  survivalProgressFill.style.width = '100%';
+  updateSStatsDisplay(0, 0, 0, 0);
 
-  session.countdownTimer = setInterval(tickSprintCountdown, 100);
-  session.statsTimer = setInterval(updateSprintStats, 500);
+  session.countdownTimer = setInterval(tickSurvivalCountdown, 100);
+  session.statsTimer = setInterval(updateSurvivalStats, 500);
 
-  setTimeout(() => textarea.focus(), 100);
+  setTimeout(() => sTextarea.focus(), 100);
 }
 
-function endSprint() {
+function endSurvival() {
   session.active = false;
   clearInterval(session.countdownTimer);
   clearInterval(session.statsTimer);
-  textarea.disabled = true;
+  sTextarea.disabled = true;
 
-  const finalText = textarea.value;
+  const finalText = sTextarea.value;
   const words = countWords(finalText);
   const chars = finalText.length;
   const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
   const wpm = elapsed > 0 ? Math.round(words / (elapsed / 60)) : 0;
 
-  document.body.classList.remove('sprinting');
-  sprintView.classList.remove('active');
+  sTextarea.value = '';
+
+  document.body.classList.remove('surviving');
+  survivalView.classList.remove('active');
 
   showSessionComplete(elapsed, words, wpm, chars);
 }
 
-function tickSprintCountdown() {
-  if (!session.active || session.mode !== 'sprint') return;
-  sprintCurrentMs -= 100;
-  if (sprintCurrentMs <= 0) {
-    sprintCurrentMs = 0;
-    sprintTimerEl.textContent = '00:00';
-    sprintProgressFill.style.width = '0%';
-    endSprint();
+function tickSurvivalCountdown() {
+  if (!session.active || session.mode !== 'survival') return;
+  survivalCurrentMs -= 100;
+  if (survivalCurrentMs <= 0) {
+    survivalCurrentMs = 0;
+    survivalTimerEl.textContent = '00:00';
+    survivalProgressFill.style.width = '0%';
+    endSurvival();
     return;
   }
-  sprintTimerEl.textContent = formatCountdown(sprintCurrentMs);
-  const pct = (sprintCurrentMs / sprintTimeoutMs) * 100;
-  sprintProgressFill.style.width = pct + '%';
+  survivalTimerEl.textContent = formatCountdown(survivalCurrentMs);
+  const pct = (survivalCurrentMs / survivalTimeoutMs) * 100;
+  survivalProgressFill.style.width = pct + '%';
 }
 
-function resetSprintCountdown() {
-  if (!session.active || session.mode !== 'sprint') return;
-  sprintCurrentMs = sprintTimeoutMs;
-  sprintTimerEl.textContent = formatCountdown(sprintTimeoutMs);
-  sprintProgressFill.style.width = '100%';
+function resetSurvivalCountdown() {
+  if (!session.active || session.mode !== 'survival') return;
+  survivalCurrentMs = survivalTimeoutMs;
+  survivalTimerEl.textContent = formatCountdown(survivalTimeoutMs);
+  survivalProgressFill.style.width = '100%';
 }
 
-function updateSprintStats() {
-  if (!session.active || session.mode !== 'sprint') return;
-  const text = textarea.value;
+function updateSurvivalStats() {
+  if (!session.active || session.mode !== 'survival') return;
+  const text = sTextarea.value;
   const words = countWords(text);
   const chars = text.length;
   const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
   const wpm = elapsed > 0 ? Math.round(words / (elapsed / 60)) : 0;
-  updateStatsDisplay(words, chars, wpm, elapsed);
+  updateSStatsDisplay(words, chars, wpm, elapsed);
 }
 
-function updateStatsDisplay(words, chars, wpm, elapsed) {
-  statWords.textContent = words.toLocaleString();
-  statChars.textContent = chars.toLocaleString();
-  statWpm.textContent = wpm;
-  statTime.textContent = formatTime(elapsed);
+function updateSStatsDisplay(words, chars, wpm, elapsed) {
+  sStatWords.textContent = words.toLocaleString();
+  sStatChars.textContent = chars.toLocaleString();
+  sStatWpm.textContent = wpm;
+  sStatTime.textContent = formatTime(elapsed);
 }
 
-// Sprint events
-sprintBeginBtn.addEventListener('click', beginSprintSession);
-textarea.addEventListener('input', resetSprintCountdown);
-document.getElementById('sprint-end-btn').addEventListener('click', endSprint);
-document.getElementById('sprint-leave-btn').addEventListener('click', () => {
-  if (session.active && session.mode === 'sprint') showLeaveConfirm();
+// Survival events
+survivalBeginBtn.addEventListener('click', beginSurvivalSession);
+sTextarea.addEventListener('input', resetSurvivalCountdown);
+document.getElementById('survival-end-btn').addEventListener('click', endSurvival);
+document.getElementById('survival-leave-btn').addEventListener('click', () => {
+  if (session.active && session.mode === 'survival') showLeaveConfirm();
+  else {
+    document.body.classList.remove('surviving');
+    survivalView.classList.remove('active');
+  }
+});
+document.getElementById('survival-new-prompt-btn').addEventListener('click', () => {
+  if (session.active) return;
+  pickFreshPrompt();
+  sTopicEl.textContent = currentTopic || 'Free Writing';
+  sPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
 });
 
-// ========== Topic Mode ==========
-const topicView = document.getElementById('topic-view');
-const tTextarea = document.getElementById('topic-textarea');
-const tTimerEl = document.getElementById('topic-timer');
-const tTimerSubEl = document.getElementById('topic-timer-sub');
-const tProgressFill = document.getElementById('topic-progress-fill');
-const tSetup = document.getElementById('topic-setup');
-const tActive = document.getElementById('topic-active');
-const tBeginBtn = document.getElementById('topic-begin-btn');
-const tStatWords = document.getElementById('t-stat-words');
-const tStatChars = document.getElementById('t-stat-chars');
-const tStatWpm = document.getElementById('t-stat-wpm');
-const tStatTime = document.getElementById('t-stat-time');
-const tTopicEl = document.getElementById('topic-prompt-topic');
-const tPromptEl = document.getElementById('topic-prompt-text');
-const tTimerOpts = document.querySelectorAll('#topic-setup .timer-opt');
+// ========== Creative Mode ==========
+const creativeView = document.getElementById('creative-view');
+const cTextarea = document.getElementById('creative-textarea');
+const cTimerEl = document.getElementById('creative-timer');
+const cTimerSubEl = document.getElementById('creative-timer-sub');
+const cProgressFill = document.getElementById('creative-progress-fill');
+const cSetup = document.getElementById('creative-setup');
+const cActive = document.getElementById('creative-active');
+const cBeginBtn = document.getElementById('creative-begin-btn');
+const cStatWords = document.getElementById('c-stat-words');
+const cStatChars = document.getElementById('c-stat-chars');
+const cStatWpm = document.getElementById('c-stat-wpm');
+const cStatTime = document.getElementById('c-stat-time');
+const cTopicEl = document.getElementById('creative-prompt-topic');
+const cPromptEl = document.getElementById('creative-prompt-text');
+const cTimerOpts = document.querySelectorAll('#creative-setup .timer-opt');
+const cPromptCard = document.getElementById('creative-prompt-card');
+let creativeShowTopic = true;
 
-let topicTimeoutMs = 5000;
-let topicCurrentMs = 5000;
-let topicCountdownTimer = null;
-let topicStatsTimer = null;
+let creativeTimeoutMs = 5000;
+let creativeCurrentMs = 5000;
+let creativeCountdownTimer = null;
+let creativeStatsTimer = null;
 
-tTimerOpts.forEach(btn => {
+cTimerOpts.forEach(btn => {
   btn.addEventListener('click', () => {
     if (session.active) return;
-    tTimerOpts.forEach(b => b.classList.remove('active'));
+    cTimerOpts.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    topicTimeoutMs = parseInt(btn.dataset.seconds, 10) * 1000;
-    tTimerEl.textContent = formatCountdown(topicTimeoutMs);
+    creativeTimeoutMs = parseInt(btn.dataset.seconds, 10) * 1000;
+    cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
   });
 });
 
-function startTopic() {
+function startCreative() {
   pickFreshPrompt();
-  session.mode = 'topic';
+  session.mode = 'creative';
   session.active = false;
+  creativeShowTopic = true;
 
-  tTextarea.value = '';
-  tTextarea.disabled = true;
-  tSetup.classList.remove('hidden');
-  tActive.classList.add('hidden');
-  tTopicEl.textContent = currentTopic || 'Free Writing';
-  tPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
+  cTextarea.value = '';
+  cTextarea.disabled = true;
+  cSetup.classList.remove('hidden');
+  cActive.classList.add('hidden');
+  cTopicEl.textContent = currentTopic || 'Free Writing';
+  cPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
+  cPromptCard.classList.remove('hidden');
 
-  document.body.classList.add('topicking');
-  topicView.classList.add('active');
-  updateTopicStatsDisplay(0, 0, 0, 0);
+  document.body.classList.add('creativing');
+  creativeView.classList.add('active');
+  updateCreativeStatsDisplay(0, 0, 0, 0);
 }
 
-function beginTopicSession() {
+function beginCreativeSession() {
   session.active = true;
   session.startTime = Date.now();
-  topicCurrentMs = topicTimeoutMs;
+  creativeCurrentMs = creativeTimeoutMs;
 
-  tTextarea.disabled = false;
-  tSetup.classList.add('hidden');
-  tActive.classList.remove('hidden');
+  cTextarea.disabled = false;
+  cSetup.classList.add('hidden');
+  cActive.classList.remove('hidden');
 
-  tTimerEl.textContent = formatCountdown(topicTimeoutMs);
-  tTimerSubEl.textContent = 'Keep writing...';
-  tProgressFill.style.width = '100%';
-  updateTopicStatsDisplay(0, 0, 0, 0);
+  cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
+  cTimerSubEl.textContent = 'Keep writing...';
+  cProgressFill.style.width = '100%';
+  updateCStatsDisplay(0, 0, 0, 0);
 
-  topicCountdownTimer = setInterval(tickTopicCountdown, 100);
-  topicStatsTimer = setInterval(updateTopicStats, 500);
+  creativeCountdownTimer = setInterval(tickCreativeCountdown, 100);
+  creativeStatsTimer = setInterval(updateCreativeStats, 500);
 
-  setTimeout(() => tTextarea.focus(), 100);
+  setTimeout(() => cTextarea.focus(), 100);
 }
 
-function endTopic() {
+function endCreative() {
   session.active = false;
-  if (topicCountdownTimer) {
-    clearInterval(topicCountdownTimer);
-    topicCountdownTimer = null;
+  if (creativeCountdownTimer) {
+    clearInterval(creativeCountdownTimer);
+    creativeCountdownTimer = null;
   }
-  clearInterval(topicStatsTimer);
-  tTextarea.disabled = true;
+  clearInterval(creativeStatsTimer);
+  cTextarea.disabled = true;
 
-  const finalText = tTextarea.value;
+  const finalText = cTextarea.value;
   const words = countWords(finalText);
   const chars = finalText.length;
   const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
   const wpm = elapsed > 0 ? Math.round(words / (elapsed / 60)) : 0;
 
-  document.body.classList.remove('topicking');
-  topicView.classList.remove('active');
+  cTextarea.value = '';
+
+  document.body.classList.remove('creativing');
+  creativeView.classList.remove('active');
 
   showSessionComplete(elapsed, words, wpm, chars);
 }
 
-function tickTopicCountdown() {
-  if (!session.active || session.mode !== 'topic') return;
-  topicCurrentMs -= 100;
-  if (topicCurrentMs <= 0) {
-    topicCurrentMs = 0;
-    tTimerEl.textContent = '00:00';
-    tProgressFill.style.width = '0%';
-    endTopic();
+function tickCreativeCountdown() {
+  if (!session.active || session.mode !== 'creative') return;
+  creativeCurrentMs -= 100;
+  if (creativeCurrentMs <= 0) {
+    creativeCurrentMs = 0;
+    cTimerEl.textContent = '00:00';
+    cProgressFill.style.width = '0%';
+    endCreative();
     return;
   }
-  tTimerEl.textContent = formatCountdown(topicCurrentMs);
-  const pct = (topicCurrentMs / topicTimeoutMs) * 100;
-  tProgressFill.style.width = pct + '%';
+  cTimerEl.textContent = formatCountdown(creativeCurrentMs);
+  const pct = (creativeCurrentMs / creativeTimeoutMs) * 100;
+  cProgressFill.style.width = pct + '%';
 }
 
-function resetTopicCountdown() {
-  if (!session.active || session.mode !== 'topic') return;
-  topicCurrentMs = topicTimeoutMs;
-  tTimerEl.textContent = formatCountdown(topicTimeoutMs);
-  tProgressFill.style.width = '100%';
+function resetCreativeCountdown() {
+  if (!session.active || session.mode !== 'creative') return;
+  creativeCurrentMs = creativeTimeoutMs;
+  cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
+  cProgressFill.style.width = '100%';
 }
 
-function updateTopicStats() {
-  if (!session.active || session.mode !== 'topic') return;
-  const text = tTextarea.value;
+function updateCreativeStats() {
+  if (!session.active || session.mode !== 'creative') return;
+  const text = cTextarea.value;
   const words = countWords(text);
   const chars = text.length;
   const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
   const wpm = elapsed > 0 ? Math.round(words / (elapsed / 60)) : 0;
-  updateTopicStatsDisplay(words, chars, wpm, elapsed);
+  updateCStatsDisplay(words, chars, wpm, elapsed);
 }
 
-function updateTopicStatsDisplay(words, chars, wpm, elapsed) {
-  tStatWords.textContent = words.toLocaleString();
-  tStatChars.textContent = chars.toLocaleString();
-  tStatWpm.textContent = wpm;
-  tStatTime.textContent = formatTime(elapsed);
+function updateCStatsDisplay(words, chars, wpm, elapsed) {
+  cStatWords.textContent = words.toLocaleString();
+  cStatChars.textContent = chars.toLocaleString();
+  cStatWpm.textContent = wpm;
+  cStatTime.textContent = formatTime(elapsed);
 }
 
-// Topic events
-tBeginBtn.addEventListener('click', beginTopicSession);
-tTextarea.addEventListener('input', resetTopicCountdown);
-document.getElementById('topic-end-btn').addEventListener('click', endTopic);
-document.getElementById('topic-leave-btn').addEventListener('click', () => {
-  if (session.active && session.mode === 'topic') showLeaveConfirm();
+// Creative events
+cBeginBtn.addEventListener('click', beginCreativeSession);
+cTextarea.addEventListener('input', resetCreativeCountdown);
+document.getElementById('creative-end-btn').addEventListener('click', endCreative);
+document.getElementById('creative-leave-btn').addEventListener('click', () => {
+  if (session.active && session.mode === 'creative') showLeaveConfirm();
+  else {
+    document.body.classList.remove('creativing');
+    creativeView.classList.remove('active');
+  }
 });
-document.getElementById('topic-new-prompt-btn').addEventListener('click', () => {
+document.getElementById('creative-new-prompt-btn').addEventListener('click', () => {
   if (session.active) return;
   pickFreshPrompt();
-  tTopicEl.textContent = currentTopic || 'Free Writing';
-  tPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
+  cTopicEl.textContent = currentTopic || 'Free Writing';
+  cPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
+});
+document.getElementById('creative-toggle-topic-btn').addEventListener('click', () => {
+  if (session.active) return;
+  creativeShowTopic = !creativeShowTopic;
+  const btn = document.getElementById('creative-toggle-topic-btn');
+  if (creativeShowTopic) {
+    cPromptCard.classList.remove('hidden');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Hide Topic';
+  } else {
+    cPromptCard.classList.add('hidden');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Show Topic';
+  }
 });
 
 // ========== Leave Confirmation ==========
@@ -467,10 +524,10 @@ function hideLeaveConfirm() {
 document.getElementById('leave-stay-btn').addEventListener('click', () => {
   hideLeaveConfirm();
   const target = {
-    sprint: textarea,
-    topic: tTextarea,
+    survival: sTextarea,
+    creative: cTextarea,
     practice: pTextarea,
-  }[session.mode] || textarea;
+  }[session.mode] || sTextarea;
   setTimeout(() => target.focus(), 100);
 });
 
@@ -479,13 +536,13 @@ document.getElementById('leave-leave-btn').addEventListener('click', () => {
   session.active = false;
   clearInterval(session.countdownTimer);
   clearInterval(session.statsTimer);
-  if (topicCountdownTimer) {
-    clearInterval(topicCountdownTimer);
-    topicCountdownTimer = null;
+  if (creativeCountdownTimer) {
+    clearInterval(creativeCountdownTimer);
+    creativeCountdownTimer = null;
   }
-  if (topicStatsTimer) {
-    clearInterval(topicStatsTimer);
-    topicStatsTimer = null;
+  if (creativeStatsTimer) {
+    clearInterval(creativeStatsTimer);
+    creativeStatsTimer = null;
   }
   if (practiceCountdownTimer) {
     clearInterval(practiceCountdownTimer);
@@ -495,12 +552,12 @@ document.getElementById('leave-leave-btn').addEventListener('click', () => {
     clearInterval(practiceStatsTimer);
     practiceStatsTimer = null;
   }
-  textarea.disabled = true;
-  tTextarea.disabled = true;
+  sTextarea.disabled = true;
+  cTextarea.disabled = true;
   pTextarea.disabled = true;
-  document.body.classList.remove('sprinting', 'topicking', 'practicing');
-  sprintView.classList.remove('active');
-  topicView.classList.remove('active');
+  document.body.classList.remove('surviving', 'creativing', 'practicing');
+  survivalView.classList.remove('active');
+  creativeView.classList.remove('active');
   practiceView.classList.remove('active');
 });
 
@@ -518,8 +575,8 @@ document.getElementById('sc-close-btn').addEventListener('click', () => {
 document.getElementById('sc-redo-btn').addEventListener('click', () => {
   scOverlay.classList.remove('active');
   if (session.mode === 'practice') startPractice();
-  else if (session.mode === 'topic') startTopic();
-  else startSprint();
+  else if (session.mode === 'creative') startCreative();
+  else startSurvival();
 });
 
 document.getElementById('sc-discard-btn').addEventListener('click', () => {
@@ -532,7 +589,7 @@ document.getElementById('sc-save-btn').addEventListener('click', () => {
   scOverlay.classList.remove('active');
 });
 
-// ========== Topics / Prompts ==========
+// ========== Prompts ==========
 const PROMPTS = {
   'Life & Philosophy': [
     'What does a meaningful life look like to you, and how close are you to living it?',
@@ -805,13 +862,13 @@ document.getElementById('practice-leave-btn').addEventListener('click', () => {
 });
 
 // ========== Start buttons ==========
-document.querySelector('.start-sprint-btn').addEventListener('click', () => {
+document.querySelector('.start-survival-btn').addEventListener('click', () => {
   exitAllSetup();
-  startSprint();
+  startSurvival();
 });
-document.querySelector('.start-topic-btn')?.addEventListener('click', () => {
+document.querySelector('.start-creative-btn')?.addEventListener('click', () => {
   exitAllSetup();
-  startTopic();
+  startCreative();
 });
 document.querySelector('.start-practice-btn')?.addEventListener('click', () => {
   exitAllSetup();

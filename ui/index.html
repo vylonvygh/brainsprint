@@ -57,13 +57,13 @@
               <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
               <span class="nav-label">Home</span>
             </li>
-            <li class="nav-item" data-view="sprint">
+            <li class="nav-item" data-view="survival">
               <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
-              <span class="nav-label">Sprint Mode</span>
+              <span class="nav-label">Survival Mode</span>
             </li>
-            <li class="nav-item" data-view="topic">
+            <li class="nav-item" data-view="creative">
               <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg></span>
-              <span class="nav-label">Topic Mode</span>
+              <span class="nav-label">Creative Mode</span>
             </li>
             <li class="nav-item" data-view="practice">
               <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span>
@@ -120,21 +120,21 @@
               <div class="mode-card-badge">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               </div>
-              <h2 class="mode-card-title">Sprint Mode</h2>
+              <h2 class="mode-card-title">Survival Mode</h2>
               <p class="mode-card-desc">Write continuously.</p>
               <p class="mode-card-desc">Beat the countdown.</p>
               <p class="mode-card-desc">Push your limits.</p>
-              <button class="btn-primary start-sprint-btn">Start Sprint</button>
+              <button class="btn-primary start-survival-btn">Start Survival</button>
             </div>
             <div class="mode-card">
               <div class="mode-card-badge">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               </div>
-              <h2 class="mode-card-title">Topic Mode</h2>
+              <h2 class="mode-card-title">Creative Mode</h2>
               <p class="mode-card-desc">Write with a prompt.</p>
               <p class="mode-card-desc">Beat the countdown.</p>
-              <p class="mode-card-desc">Stay on topic.</p>
-              <button class="btn-primary start-topic-btn">Start Topic</button>
+<p class="mode-card-desc">Write with prompts.</p>
+<button class="btn-primary start-creative-btn">Start Creative</button>
             </div>
             <div class="mode-card">
               <div class="mode-card-badge">
@@ -204,91 +204,108 @@
       </main>
     </div>
 
-    <!-- Sprint Session (full-width, no sidebar) -->
-    <div id="sprint-view">
-      <div id="sprint-topbar">
-        <button id="sprint-leave-btn">
+    <!-- Survival Session (full-width, no sidebar) -->
+    <div id="survival-view">
+      <div id="survival-topbar">
+        <button id="survival-leave-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Leave Session
         </button>
-        <span id="sprint-title">Sprint Mode</span>
-        <button id="sprint-end-btn">End Session</button>
+        <span id="survival-title">Survival Mode</span>
+        <button id="survival-end-btn">End Session</button>
       </div>
 
-        <div id="sprint-body">
-          <div id="sprint-setup">
+        <div id="survival-body">
+          <div id="survival-setup">
             <div class="setup-card">
               <div class="setup-card-icon">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               </div>
-              <h2 class="setup-card-title">Sprint Mode</h2>
+              <h2 class="setup-card-title">Survival Mode</h2>
               <p class="setup-card-desc">Write continuously. Beat the countdown.</p>
               <p class="setup-card-sub">Press a key before the timer runs out to keep your streak alive.</p>
-              <button id="sprint-begin-btn" class="btn-primary begin-btn">Begin Sprint</button>
+
+              <div class="setup-prompt-card">
+                <div class="setup-prompt-topic" id="survival-prompt-topic"></div>
+                <div class="setup-prompt-text" id="survival-prompt-text"></div>
+                <button id="survival-new-prompt-btn" class="new-prompt-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  New Prompt
+                </button>
+              </div>
+
+              <p class="setup-card-warning">⚠ All writing is deleted on failure. Keep typing to survive.</p>
+              <button id="survival-begin-btn" class="btn-primary begin-btn">Begin Survival</button>
             </div>
           </div>
 
-          <div id="sprint-active" class="hidden">
-            <div id="sprint-progress-track">
-              <div id="sprint-progress-fill"></div>
+          <div id="survival-active" class="hidden">
+            <div id="survival-progress-track">
+              <div id="survival-progress-fill"></div>
             </div>
 
-            <div id="sprint-countdown">
-              <span id="sprint-timer">00:05</span>
-              <span id="sprint-timer-sub">Keep writing...</span>
+            <div id="survival-countdown">
+              <span id="survival-timer">00:05</span>
+              <span id="survival-timer-sub">Keep writing...</span>
             </div>
 
-            <textarea id="sprint-textarea" placeholder="Start writing here..." disabled></textarea>
+            <textarea id="survival-textarea" placeholder="Start writing here..." disabled></textarea>
 
-            <div id="sprint-stats">
-              <div class="sprint-stat">
-                <span class="sprint-stat-label">Words</span>
-                <span class="sprint-stat-value" id="stat-words">0</span>
+            <div id="survival-stats">
+              <div class="survival-stat">
+                <span class="survival-stat-label">Words</span>
+                <span class="survival-stat-value" id="s-stat-words">0</span>
               </div>
-              <div class="sprint-stat">
-                <span class="sprint-stat-label">Characters</span>
-                <span class="sprint-stat-value" id="stat-chars">0</span>
+              <div class="survival-stat">
+                <span class="survival-stat-label">Characters</span>
+                <span class="survival-stat-value" id="s-stat-chars">0</span>
               </div>
-              <div class="sprint-stat">
-                <span class="sprint-stat-label">WPM</span>
-                <span class="sprint-stat-value" id="stat-wpm">0</span>
+              <div class="survival-stat">
+                <span class="survival-stat-label">WPM</span>
+                <span class="survival-stat-value" id="s-stat-wpm">0</span>
               </div>
-              <div class="sprint-stat">
-                <span class="sprint-stat-label">Time Elapsed</span>
-                <span class="sprint-stat-value" id="stat-time">00:00</span>
+              <div class="survival-stat">
+                <span class="survival-stat-label">Time Elapsed</span>
+                <span class="survival-stat-value" id="s-stat-time">00:00</span>
               </div>
             </div>
           </div>
         </div>
     </div>
 
-    <!-- Topic Session (full-width, no sidebar) -->
-    <div id="topic-view">
-      <div id="topic-topbar">
-        <button id="topic-leave-btn">
+    <!-- Creative Session (full-width, no sidebar) -->
+    <div id="creative-view">
+      <div id="creative-topbar">
+        <button id="creative-leave-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Leave Session
         </button>
-        <span id="topic-title">Topic Mode</span>
-        <button id="topic-end-btn">End Session</button>
+        <span id="creative-title">Creative Mode</span>
+        <button id="creative-end-btn">End Session</button>
       </div>
 
-      <div id="topic-body">
-        <div id="topic-setup">
+      <div id="creative-body">
+        <div id="creative-setup">
           <div class="setup-card">
             <div class="setup-card-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
-            <h2 class="setup-card-title">Topic Mode</h2>
+            <h2 class="setup-card-title">Creative Mode</h2>
             <p class="setup-card-desc">Write with a prompt. Beat the countdown.</p>
 
-            <div class="setup-prompt-card">
-              <div class="setup-prompt-topic" id="topic-prompt-topic"></div>
-              <div class="setup-prompt-text" id="topic-prompt-text"></div>
-              <button id="topic-new-prompt-btn" class="new-prompt-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                New Prompt
-              </button>
+            <div class="setup-prompt-card" id="creative-prompt-card">
+              <div class="setup-prompt-topic" id="creative-prompt-topic"></div>
+              <div class="setup-prompt-text" id="creative-prompt-text"></div>
+              <div class="setup-prompt-actions">
+                <button id="creative-new-prompt-btn" class="new-prompt-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  New Prompt
+                </button>
+                <button id="creative-toggle-topic-btn" class="new-prompt-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Hide Topic
+                </button>
+              </div>
             </div>
 
             <div class="setup-timer-bar">
@@ -302,38 +319,39 @@
               </div>
             </div>
 
-            <button id="topic-begin-btn" class="btn-primary begin-btn">Begin Topic</button>
+            <p class="setup-card-warning">⚠ Writing is deleted when the timer runs out.</p>
+            <button id="creative-begin-btn" class="btn-primary begin-btn">Begin Creative</button>
           </div>
         </div>
 
-        <div id="topic-active" class="hidden">
-          <div id="topic-progress-track">
-            <div id="topic-progress-fill"></div>
+        <div id="creative-active" class="hidden">
+          <div id="creative-progress-track">
+            <div id="creative-progress-fill"></div>
           </div>
 
-          <div id="topic-countdown">
-            <span id="topic-timer">00:05</span>
-            <span id="topic-timer-sub">Keep writing...</span>
+          <div id="creative-countdown">
+            <span id="creative-timer">00:05</span>
+            <span id="creative-timer-sub">Keep writing...</span>
           </div>
 
-          <textarea id="topic-textarea" placeholder="Start writing here..." disabled></textarea>
+          <textarea id="creative-textarea" placeholder="Start writing here..." disabled></textarea>
 
-          <div id="topic-stats">
-            <div class="sprint-stat">
-              <span class="sprint-stat-label">Words</span>
-              <span class="sprint-stat-value" id="t-stat-words">0</span>
+          <div id="creative-stats">
+            <div class="survival-stat">
+              <span class="survival-stat-label">Words</span>
+              <span class="survival-stat-value" id="c-s-stat-words">0</span>
             </div>
-            <div class="sprint-stat">
-              <span class="sprint-stat-label">Characters</span>
-              <span class="sprint-stat-value" id="t-stat-chars">0</span>
+            <div class="survival-stat">
+              <span class="survival-stat-label">Characters</span>
+              <span class="survival-stat-value" id="c-s-stat-chars">0</span>
             </div>
-            <div class="sprint-stat">
-              <span class="sprint-stat-label">WPM</span>
-              <span class="sprint-stat-value" id="t-stat-wpm">0</span>
+            <div class="survival-stat">
+              <span class="survival-stat-label">WPM</span>
+              <span class="survival-stat-value" id="c-s-stat-wpm">0</span>
             </div>
-            <div class="sprint-stat">
-              <span class="sprint-stat-label">Time Elapsed</span>
-              <span class="sprint-stat-value" id="t-stat-time">00:00</span>
+            <div class="survival-stat">
+              <span class="survival-stat-label">Time Elapsed</span>
+              <span class="survival-stat-value" id="c-s-stat-time">00:00</span>
             </div>
           </div>
         </div>
@@ -386,21 +404,21 @@
         <textarea id="practice-textarea" placeholder="Start writing here..." disabled></textarea>
 
         <div id="practice-stats">
-          <div class="sprint-stat">
-            <span class="sprint-stat-label">Words</span>
-            <span class="sprint-stat-value" id="p-stat-words">0</span>
+          <div class="survival-stat">
+            <span class="survival-stat-label">Words</span>
+            <span class="survival-stat-value" id="p-s-stat-words">0</span>
           </div>
-          <div class="sprint-stat">
-            <span class="sprint-stat-label">Characters</span>
-            <span class="sprint-stat-value" id="p-stat-chars">0</span>
+          <div class="survival-stat">
+            <span class="survival-stat-label">Characters</span>
+            <span class="survival-stat-value" id="p-s-stat-chars">0</span>
           </div>
-          <div class="sprint-stat">
-            <span class="sprint-stat-label">WPM</span>
-            <span class="sprint-stat-value" id="p-stat-wpm">0</span>
+          <div class="survival-stat">
+            <span class="survival-stat-label">WPM</span>
+            <span class="survival-stat-value" id="p-s-stat-wpm">0</span>
           </div>
-          <div class="sprint-stat">
-            <span class="sprint-stat-label">Time Elapsed</span>
-            <span class="sprint-stat-value" id="p-stat-time">00:00</span>
+          <div class="survival-stat">
+            <span class="survival-stat-label">Time Elapsed</span>
+            <span class="survival-stat-value" id="p-s-stat-time">00:00</span>
           </div>
         </div>
       </div>

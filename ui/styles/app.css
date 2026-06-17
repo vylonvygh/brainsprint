@@ -457,9 +457,9 @@
   display: flex;
 }
 
-/* ========== Sprint/Topic Setup toggle ========== */
-#sprint-setup,
-#topic-setup {
+/* ========== Survival/Creative Setup toggle ========== */
+#survival-setup,
+#creative-setup {
   display: flex;
   flex: 1;
   align-items: center;
@@ -467,18 +467,18 @@
   width: 100%;
 }
 
-.sprint-stat {
+.survival-stat {
   text-align: center;
 }
 
-.sprint-stat-label {
+.survival-stat-label {
   display: block;
   font-size: 12px;
   color: var(--text-secondary);
   margin-bottom: 2px;
 }
 
-.sprint-stat-value {
+.survival-stat-value {
   display: block;
   font-size: 20px;
   font-weight: 700;
@@ -656,8 +656,8 @@
 }
 
 /* ========== Shared Session View Base ========== */
-#sprint-view,
-#topic-view,
+#survival-view,
+#creative-view,
 #practice-view {
   display: none;
   flex-direction: column;
@@ -666,14 +666,14 @@
   background: var(--bg-primary);
 }
 
-#sprint-view.active,
-#topic-view.active,
+#survival-view.active,
+#creative-view.active,
 #practice-view.active {
   display: flex;
 }
 
-#sprint-topbar,
-#topic-topbar,
+#survival-topbar,
+#creative-topbar,
 #practice-topbar {
   display: flex;
   align-items: center;
@@ -683,8 +683,8 @@
   flex-shrink: 0;
 }
 
-#sprint-leave-btn,
-#topic-leave-btn,
+#survival-leave-btn,
+#creative-leave-btn,
 #practice-leave-btn {
   display: flex;
   align-items: center;
@@ -700,23 +700,23 @@
   transition: background 0.15s, color 0.15s;
 }
 
-#sprint-leave-btn:hover,
-#topic-leave-btn:hover,
+#survival-leave-btn:hover,
+#creative-leave-btn:hover,
 #practice-leave-btn:hover {
   background: var(--bg-card);
   color: var(--text-primary);
 }
 
-#sprint-title,
-#topic-title,
+#survival-title,
+#creative-title,
 #practice-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
-#sprint-end-btn,
-#topic-end-btn,
+#survival-end-btn,
+#creative-end-btn,
 #practice-end-btn {
   padding: 6px 18px;
   border-radius: 8px;
@@ -729,15 +729,15 @@
   transition: background 0.15s;
 }
 
-#sprint-end-btn:hover,
-#topic-end-btn:hover,
+#survival-end-btn:hover,
+#creative-end-btn:hover,
 #practice-end-btn:hover {
   background: var(--danger);
   color: #fff;
 }
 
-#sprint-body,
-#topic-body,
+#survival-body,
+#creative-body,
 #practice-body {
   flex: 1;
   display: flex;
@@ -749,16 +749,29 @@
 }
 
 @media (max-width: 900px) {
-  #sprint-body,
-  #topic-body,
+  #survival-body,
+  #creative-body,
   #practice-body {
     padding: 16px 16px 12px;
   }
 }
 
+/* ========== Active Content Wrapper ========== */
+#survival-active,
+#creative-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 24px;
+}
+
 /* ========== Setup Card (shared by all modes) ========== */
-#sprint-setup,
-#topic-setup {
+#survival-setup,
+#creative-setup {
   display: flex;
   flex: 1;
   align-items: center;
@@ -808,6 +821,15 @@
   margin-bottom: 24px;
 }
 
+.setup-card-warning {
+  font-size: 13px;
+  color: var(--accent-orange, #e67e22);
+  opacity: 0.9;
+  margin-bottom: 16px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
 .begin-btn {
   padding: 14px 56px;
   font-size: 16px;
@@ -842,6 +864,12 @@
   line-height: 1.6;
   color: var(--text-primary);
   font-style: italic;
+}
+
+.setup-prompt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .new-prompt-btn {
@@ -919,9 +947,9 @@
 }
 
 /* ========== Active content (progress, countdown, textarea, stats) ========== */
-/* Shared progress, countdown, stats — same classes work for sprint and topic */
-#topic-progress-track,
-#sprint-progress-track {
+/* Shared progress, countdown, stats — same classes work for survival and creative */
+#creative-progress-track,
+#survival-progress-track {
   width: 100%;
   max-width: 700px;
   height: 4px;
@@ -932,8 +960,8 @@
   flex-shrink: 0;
 }
 
-#topic-progress-fill,
-#sprint-progress-fill {
+#creative-progress-fill,
+#survival-progress-fill {
   height: 100%;
   width: 100%;
   background: var(--accent-purple);
@@ -941,15 +969,15 @@
   transition: width 0.1s linear;
 }
 
-#topic-countdown,
-#sprint-countdown {
+#creative-countdown,
+#survival-countdown {
   text-align: center;
   margin-bottom: 24px;
   flex-shrink: 0;
 }
 
-#topic-timer,
-#sprint-timer {
+#creative-timer,
+#survival-timer {
   display: block;
   font-size: 56px;
   font-weight: 800;
@@ -959,29 +987,29 @@
   font-variant-numeric: tabular-nums;
 }
 
-#topic-timer-sub,
-#sprint-timer-sub {
+#creative-timer-sub,
+#survival-timer-sub {
   display: block;
   font-size: 14px;
   color: var(--text-secondary);
   margin-top: 4px;
 }
 
-#sprint-textarea:disabled,
-#topic-textarea:disabled,
+#survival-textarea:disabled,
+#creative-textarea:disabled,
 #practice-textarea:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-#sprint-textarea:disabled:focus,
-#topic-textarea:disabled:focus,
+#survival-textarea:disabled:focus,
+#creative-textarea:disabled:focus,
 #practice-textarea:disabled:focus {
   border-color: var(--border-subtle);
 }
 
-#topic-textarea,
-#sprint-textarea,
+#creative-textarea,
+#survival-textarea,
 #practice-textarea {
   flex: 1;
   width: 100%;
@@ -999,21 +1027,21 @@
   margin-bottom: 16px;
 }
 
-#topic-textarea::placeholder,
-#sprint-textarea::placeholder,
+#creative-textarea::placeholder,
+#survival-textarea::placeholder,
 #practice-textarea::placeholder {
   color: var(--text-secondary);
   opacity: 0.6;
 }
 
-#topic-textarea:focus,
-#sprint-textarea:focus,
+#creative-textarea:focus,
+#survival-textarea:focus,
 #practice-textarea:focus {
   border-color: var(--accent-purple);
 }
 
-#topic-stats,
-#sprint-stats,
+#creative-stats,
+#survival-stats,
 #practice-stats {
   display: flex;
   justify-content: space-around;
@@ -1029,14 +1057,14 @@
 }
 
 /* ========== Body in session modes ========== */
-body.sprinting #main-layout,
-body.topicking #main-layout,
+body.surviving #main-layout,
+body.creativing #main-layout,
 body.practicing #main-layout {
   display: none;
 }
 
-body.sprinting #titlebar,
-body.topicking #titlebar,
+body.surviving #titlebar,
+body.creativing #titlebar,
 body.practicing #titlebar {
   display: flex;
 }
