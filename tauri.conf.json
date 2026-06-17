@@ -7,6 +7,7 @@
     "frontendDist": "ui"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "BrainSprint",
@@ -14,6 +15,7 @@
         "height": 750,
         "resizable": true,
         "decorations": false,
+        "transparent": true,
         "center": true
       }
     ],

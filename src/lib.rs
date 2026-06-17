@@ -1,3 +1,6 @@
+use tauri::Manager;
+use tauri::webview::Color;
+
 mod commands;
 mod models;
 mod storage;
@@ -7,7 +10,12 @@ mod utils;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .setup(|_app| {
+        .setup(|app| {
+            // Set webview background to fully transparent so CSS border-radius
+            // creates the visual window shape on Wayland (transparent corners)
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_background_color(Some(Color(0, 0, 0, 0)));
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

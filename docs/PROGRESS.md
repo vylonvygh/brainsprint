@@ -101,3 +101,24 @@
 - WPM is calculated as average over the whole session (total words / total minutes)
 - Save Writing button is a placeholder — full save/discard flow comes in Milestone 8
 - Confirmation dialog also blocks sidebar navigation during active session
+
+---
+
+## IPC Bridge Fix
+
+**What was fixed:**
+- `window.__TAURI__` was `undefined` at runtime, breaking all window controls (minimize/maximize/close)
+- Root cause: Tauri v2 does not inject the IPC bridge globally by default — requires `"withGlobalTauri": true` in `tauri.conf.json`
+- Added `"withGlobalTauri": true` to `app` section of `tauri.conf.json`
+- Switched window controls from custom Rust commands (`invoke('minimize_window')` etc.) to Tauri v2's built-in window JS API (`window.__TAURI__.window.getCurrentWindow().minimize()`)
+- Added `core:window:default` permission to `capabilities/default.json` to authorize window operations
+- Removed `devUrl` from build config (was added temporarily for debugging, broke `cargo tauri dev`)
+
+**What changed:**
+- `tauri.conf.json` — added `withGlobalTauri: true`
+- `ui/scripts/app.js` — window controls now use Tauri v2 window JS API directly instead of custom Rust commands via `invoke()`
+- `capabilities/default.json` — added `core:window:default` permission
+
+**Lesson learned:**
+- In Tauri v2, the IPC bridge is opt-in. Without `withGlobalTauri: true`, you must use `@tauri-apps/api` npm package (requires a bundler like Vite). For plain HTML/CSS/JS frontends, `withGlobalTauri: true` is mandatory.
+- The custom protocol injection only happens when Tauri serves pages through its `tauri://` protocol — `file://` protocol does not inject the bridge.
