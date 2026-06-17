@@ -1,5 +1,10 @@
 // ========== Tauri IPC ==========
-const invoke = window.__TAURI__?.core?.invoke;
+const tauri = window.__TAURI__;
+const invoke = tauri?.core?.invoke || tauri?.invoke;
+
+if (!invoke) {
+  console.warn('Tauri IPC not available — window controls will not work outside the Tauri shell');
+}
 
 // ========== Window Controls ==========
 document.getElementById('minimize-btn').addEventListener('click', () => {
