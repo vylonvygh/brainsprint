@@ -29,7 +29,8 @@
     "icon": [
       "assets/logo.svg",
       "assets/app-logo.png",
-      "assets/icon-512.png"
+      "assets/icon-512.png",
+      "icons/icon.ico"
     ]
   }
 }
