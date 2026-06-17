@@ -40,7 +40,7 @@
     "url": "https://github.com/vylonvygh/brainsprint.git",
     "branch": "main"
 },
-    "flatpak/cargo-sources.json"
+    "cargo-sources.json"
 ]
         }
     ]
