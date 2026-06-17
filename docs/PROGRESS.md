@@ -6,7 +6,7 @@
 |-----------|--------|
 | 1 — Project Skeleton | ✅ Done |
 | 2 — Home Screen | ✅ Done |
-| 3 — Sprint Mode | ❌ Not Started |
+| 3 — Sprint Mode | ✅ Done |
 | 4 — Practice Mode | ❌ Not Started |
 | 5 — Settings | ❌ Not Started |
 | 6 — Statistics | ❌ Not Started |
@@ -69,8 +69,35 @@
 - System theme detection with listener for live changes
 
 **Notable decisions:**
-- Logo SVG is inlined in HTML to avoid file resolution issues with Tauri's asset serving (only `frontendDist` directory is served)
-- Used `decorations: false` with fully custom title bar as specified
+- Logo SVG is inlined in HTML to avoid file resolution issues with Tauri's asset serving
 - Stat values are placeholder data — real persistence comes in Milestone 6
 - Theme persistence (saving user preference) will be wired to settings in Milestone 5
-- `window.__TAURI__` used for window controls API (minimize/maximize/close)
+- Window controls use Rust commands invoked via `window.__TAURI__.core.invoke()` (fixed post-M2)
+
+---
+
+## Milestone 3 — Sprint Mode ✅
+
+**What was built:**
+- Full-width sprint session view that replaces the sidebar layout entirely (no sidebar visible during sprint)
+- Top bar with "< Leave Session" link (back arrow icon), centered "Sprint Mode" title, and red "End Session" button
+- Thin horizontal progress bar (purple fill) that decreases as countdown runs
+- Large bold purple countdown timer formatted as "mm:ss" with "Keep writing..." subtext
+- Text input area with placeholder text, auto-focus on start
+- Live stat bar at the bottom: Words, Characters, WPM, Time Elapsed
+- Countdown resets to full value on every keystroke (input event on textarea)
+- Session ends automatically when countdown reaches zero
+- Session also ends via "End Session" button
+- Session Complete overlay with 4 stat cards (Time, Words, WPM, Characters) in 2x2 grid
+- Session Complete overlay has: redo button (restart), close button (go home), discard button, save button (placeholder)
+- Leave Session confirmation dialog when clicking "Leave Session" or navigating away during active session
+- "Stay" button returns to session; "Leave" button ends and returns to main layout
+- Sprint starts from the "Start Sprint" button on the Home page
+- All stats track in real-time (words via whitespace splitting, characters via length, WPM = words/(elapsed_minutes), elapsed time)
+
+**Notable decisions:**
+- Session logic is entirely frontend-side (JavaScript) — no Rust backend calls needed since all tracking is in-memory
+- Countdown ticks at 100ms intervals for smooth progress bar animation; display rounds to seconds
+- WPM is calculated as average over the whole session (total words / total minutes)
+- Save Writing button is a placeholder — full save/discard flow comes in Milestone 8
+- Confirmation dialog also blocks sidebar navigation during active session

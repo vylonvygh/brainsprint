@@ -421,3 +421,360 @@
 .view:not(.active) {
   display: none;
 }
+
+/* ========== Overlays ========== */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay.active {
+  display: flex;
+}
+
+/* ========== Sprint View ========== */
+#sprint-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  background: var(--bg-primary);
+}
+
+#sprint-view.active {
+  display: flex;
+}
+
+#sprint-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+#sprint-leave-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+#sprint-leave-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+#sprint-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#sprint-end-btn {
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#sprint-end-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+#sprint-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 40px 20px;
+  overflow: hidden;
+}
+
+#sprint-progress-track {
+  width: 100%;
+  max-width: 700px;
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  margin-bottom: 32px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#sprint-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent-purple);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+#sprint-countdown {
+  text-align: center;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+#sprint-timer {
+  display: block;
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--accent-purple);
+  line-height: 1;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+#sprint-timer-sub {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+#sprint-textarea {
+  flex: 1;
+  width: 100%;
+  max-width: 700px;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+  margin-bottom: 16px;
+}
+
+#sprint-textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+#sprint-textarea:focus {
+  border-color: var(--accent-purple);
+}
+
+#sprint-stats {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 700px;
+  flex-shrink: 0;
+  padding: 12px 0;
+}
+
+.sprint-stat {
+  text-align: center;
+}
+
+.sprint-stat-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.sprint-stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== Session Complete Overlay ========== */
+#session-complete-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 32px;
+  width: 420px;
+  max-width: 90vw;
+  text-align: center;
+  position: relative;
+}
+
+#session-complete-top {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+#sc-redo-btn,
+#sc-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+#sc-redo-btn:hover,
+#sc-close-btn:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#sc-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin: 0 auto 16px;
+}
+
+#sc-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+#sc-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+#sc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sc-stat-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sc-stat-item svg {
+  color: var(--accent-purple);
+  margin-bottom: 4px;
+}
+
+.sc-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.sc-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-stat-unit {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#sc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-secondary {
+  padding: 10px 28px;
+  border-radius: 9px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-primary);
+}
+
+/* ========== Leave Confirmation ========== */
+#leave-confirm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90vw;
+}
+
+#leave-confirm-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+#leave-confirm-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+#leave-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ========== Hidden Utility ========== */
+.hidden {
+  display: none !important;
+}
+
+/* ========== Body in sprint mode ========== */
+body.sprinting #main-layout {
+  display: none;
+}
+
+body.sprinting #titlebar {
+  display: flex;
+}

@@ -187,13 +187,119 @@
         </div>
 
         <!-- Other views (placeholders) -->
-        <div id="view-sprint" class="view">Sprint Mode</div>
         <div id="view-practice" class="view">Practice Mode</div>
         <div id="view-topics" class="view">Topics</div>
         <div id="view-statistics" class="view">Statistics</div>
         <div id="view-settings" class="view">Settings</div>
         <div id="view-about" class="view">About</div>
       </main>
+    </div>
+
+    <!-- Sprint Session (full-width, no sidebar) -->
+    <div id="sprint-view" class="hidden">
+      <div id="sprint-topbar">
+        <button id="sprint-leave-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Leave Session
+        </button>
+        <span id="sprint-title">Sprint Mode</span>
+        <button id="sprint-end-btn">End Session</button>
+      </div>
+
+      <div id="sprint-body">
+        <div id="sprint-progress-track">
+          <div id="sprint-progress-fill"></div>
+        </div>
+
+        <div id="sprint-countdown">
+          <span id="sprint-timer">00:05</span>
+          <span id="sprint-timer-sub">Keep writing...</span>
+        </div>
+
+        <textarea id="sprint-textarea" placeholder="Start writing here..." autofocus></textarea>
+
+        <div id="sprint-stats">
+          <div class="sprint-stat">
+            <span class="sprint-stat-label">Words</span>
+            <span class="sprint-stat-value" id="stat-words">0</span>
+          </div>
+          <div class="sprint-stat">
+            <span class="sprint-stat-label">Characters</span>
+            <span class="sprint-stat-value" id="stat-chars">0</span>
+          </div>
+          <div class="sprint-stat">
+            <span class="sprint-stat-label">WPM</span>
+            <span class="sprint-stat-value" id="stat-wpm">0</span>
+          </div>
+          <div class="sprint-stat">
+            <span class="sprint-stat-label">Time Elapsed</span>
+            <span class="sprint-stat-value" id="stat-time">00:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Complete Overlay -->
+    <div id="session-complete-overlay" class="overlay hidden">
+      <div id="session-complete-card">
+        <div id="session-complete-top">
+          <button id="sc-redo-btn" title="Start new session">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button id="sc-close-btn" title="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div id="sc-badge">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 id="sc-title">Session Complete!</h2>
+        <p id="sc-subtitle">Great job! Keep pushing forward.</p>
+
+        <div id="sc-stats">
+          <div class="sc-stat-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="sc-stat-label">Time</span>
+            <span class="sc-stat-value" id="sc-stat-time">00:00</span>
+            <span class="sc-stat-unit">mm:ss</span>
+          </div>
+          <div class="sc-stat-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span class="sc-stat-label">Words</span>
+            <span class="sc-stat-value" id="sc-stat-words">0</span>
+            <span class="sc-stat-unit">words</span>
+          </div>
+          <div class="sc-stat-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="sc-stat-label">WPM</span>
+            <span class="sc-stat-value" id="sc-stat-wpm">0</span>
+            <span class="sc-stat-unit">wpm</span>
+          </div>
+          <div class="sc-stat-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            <span class="sc-stat-label">Characters</span>
+            <span class="sc-stat-value" id="sc-stat-chars">0</span>
+            <span class="sc-stat-unit">characters</span>
+          </div>
+        </div>
+
+        <div id="sc-actions">
+          <button id="sc-discard-btn" class="btn-secondary">Discard</button>
+          <button id="sc-save-btn" class="btn-primary">Save Writing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave Session Confirmation Overlay -->
+    <div id="leave-confirm-overlay" class="overlay hidden">
+      <div id="leave-confirm-card">
+        <h3>Leave Session?</h3>
+        <p>Current progress will be lost.</p>
+        <div id="leave-confirm-actions">
+          <button id="leave-stay-btn" class="btn-primary">Stay</button>
+          <button id="leave-leave-btn" class="btn-secondary">Leave</button>
+        </div>
+      </div>
     </div>
   </div>
   <script src="scripts/app.js"></script>
