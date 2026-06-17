@@ -36,10 +36,11 @@
             ],
             "sources": [
     {
-        "type": "dir",
-        "path": "../"
-    },
-    "cargo-sources.json"
+    "type": "git",
+    "url": "https://github.com/vylonvygh/brainsprint.git",
+    "branch": "main"
+},
+    "flatpak/cargo-sources.json"
 ]
         }
     ]
