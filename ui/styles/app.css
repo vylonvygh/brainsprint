@@ -21,13 +21,6 @@
   color: var(--text-secondary);
 }
 
-.debug-status {
-  margin-left: 8px;
-  font-size: 10px;
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
-
 #titlebar-center {
   flex: 1;
 }
@@ -224,6 +217,12 @@
 
 .view.active {
   display: block;
+  animation: viewFadeIn 0.2s ease;
+}
+
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ========== Home Page ========== */
@@ -313,6 +312,13 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mode-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+  border-color: var(--accent-purple);
 }
 
 .mode-card-badge {
@@ -455,11 +461,27 @@
 
 .overlay.active {
   display: flex;
+  animation: fadeIn 0.2s ease;
 }
 
-/* ========== Survival/Creative Setup toggle ========== */
+.overlay.active > * {
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ========== Survival/Creative/Practice Setup toggle ========== */
 #survival-setup,
-#creative-setup {
+#creative-setup,
+#practice-setup {
   display: flex;
   flex: 1;
   align-items: center;
@@ -647,7 +669,50 @@
 #leave-confirm-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
+}
+
+/* ========== Recovery Overlay ========== */
+#recovery-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 400px;
+  width: 90vw;
+}
+
+#recovery-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #fff;
+}
+
+#recovery-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+#recovery-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+#recovery-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 #leave-confirm-actions .btn-primary,
@@ -758,7 +823,8 @@
 
 /* ========== Active Content Wrapper ========== */
 #survival-active,
-#creative-active {
+#creative-active,
+#practice-active {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -771,7 +837,8 @@
 
 /* ========== Setup Card (shared by all modes) ========== */
 #survival-setup,
-#creative-setup {
+#creative-setup,
+#practice-setup {
   display: flex;
   flex: 1;
   align-items: center;
@@ -949,7 +1016,8 @@
 /* ========== Active content (progress, countdown, textarea, stats) ========== */
 /* Shared progress, countdown, stats — same classes work for survival and creative */
 #creative-progress-track,
-#survival-progress-track {
+#survival-progress-track,
+#practice-progress-track {
   width: 100%;
   max-width: 700px;
   height: 4px;
@@ -961,23 +1029,27 @@
 }
 
 #creative-progress-fill,
-#survival-progress-fill {
+#survival-progress-fill,
+#practice-progress-fill {
   height: 100%;
   width: 100%;
   background: var(--accent-purple);
   border-radius: 2px;
   transition: width 0.1s linear;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent-purple) 50%, transparent);
 }
 
 #creative-countdown,
-#survival-countdown {
+#survival-countdown,
+#practice-countdown {
   text-align: center;
   margin-bottom: 24px;
   flex-shrink: 0;
 }
 
 #creative-timer,
-#survival-timer {
+#survival-timer,
+#practice-timer {
   display: block;
   font-size: 56px;
   font-weight: 800;
@@ -988,7 +1060,8 @@
 }
 
 #creative-timer-sub,
-#survival-timer-sub {
+#survival-timer-sub,
+#practice-timer-sub {
   display: block;
   font-size: 14px;
   color: var(--text-secondary);
@@ -1067,4 +1140,529 @@ body.surviving #titlebar,
 body.creativing #titlebar,
 body.practicing #titlebar {
   display: flex;
+}
+
+/* ========== Game Info Bar ========== */
+.game-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 700px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.game-info-icon {
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+}
+
+.game-info-bar .game-info-sep {
+  opacity: 0.4;
+  margin: 0 2px;
+}
+
+/* ========== Session Timer Display ========== */
+.session-timer-display {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== Settings View ========== */
+#view-settings {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.view-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.view-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.settings-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.settings-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.settings-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.settings-opts {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.settings-opt-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-opt-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.settings-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 7px 28px 7px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+}
+
+.settings-select:hover {
+  border-color: var(--accent-purple);
+}
+
+.settings-select:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-purple) 20%, transparent);
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.settings-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-purple);
+}
+
+.settings-btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.settings-btn-danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.settings-btn-danger:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.settings-input,
+.settings-textarea {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.settings-input:focus,
+.settings-textarea:focus {
+  border-color: var(--accent-purple);
+}
+
+.settings-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.settings-custom-topic-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+}
+
+#settings-custom-topics-list {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 12px;
+}
+
+.custom-topic-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.custom-topic-item:last-child {
+  margin-bottom: 0;
+}
+
+.custom-topic-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.custom-topic-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.custom-topic-delete-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.custom-topic-delete-btn:hover {
+  background: color-mix(in srgb, #e74c3c 15%, transparent);
+}
+
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  width: 100%;
+  max-width: 420px;
+}
+
+.about-row + .about-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ========== Statistics View ========== */
+#view-statistics {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+#stats-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stats-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.stats-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-mode-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stat-mode-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stat-mode-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.stat-mode-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-mode-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.stat-mode-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.stat-mode-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#stats-recent {
+  margin-top: 8px;
+}
+
+#stats-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stats-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.stats-recent-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stats-recent-mode-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.stats-recent-mode-badge.survival { background: color-mix(in srgb, #e74c3c 15%, transparent); color: #e74c3c; }
+.stats-recent-mode-badge.creative { background: color-mix(in srgb, var(--accent-purple) 15%, transparent); color: var(--accent-purple); }
+.stats-recent-mode-badge.practice { background: color-mix(in srgb, #2ecc71 15%, transparent); color: #2ecc71; }
+
+.stats-recent-info {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.stats-recent-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 12px;
+}
+
+.stats-recent-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ========== Tooltips ========== */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  transform-origin: bottom center;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+[data-tooltip-right] {
+  position: relative;
+}
+
+[data-tooltip-right]::after {
+  content: attr(data-tooltip-right);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+  transform-origin: left center;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+[data-tooltip-right]:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* ========== Loading States ========== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-purple);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin: 0 auto;
+}
+
+.stats-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
 }

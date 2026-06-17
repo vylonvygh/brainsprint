@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=BrainSprint
+Comment=A minimal writing sprint application for focused thinking and flow.
+Exec=brainsprint
+Icon=io.github.vylonvygh.brainsprint
+Categories=Office;TextTools;
+Terminal=false

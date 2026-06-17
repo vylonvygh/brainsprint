@@ -1,19 +1,6 @@
 // ========== Tauri IPC ==========
 const tauri = window.__TAURI__;
 
-// Debug: show __TAURI__ availability in the title bar
-const debugTauri = document.getElementById('debug-tauri-status');
-if (debugTauri) {
-  debugTauri.textContent = tauri ? 'IPC: ok' : 'IPC: no';
-  if (tauri) {
-    const topKeys = Object.keys(tauri);
-    const winKeys = tauri.window ? Object.keys(tauri.window) : [];
-    debugTauri.title = 'Top: ' + topKeys.join(', ') + ' | Window: ' + winKeys.join(', ');
-  } else {
-    debugTauri.title = '__TAURI__ undefined';
-  }
-}
-
 // ========== Window Controls ==========
 function getWin() {
   if (!tauri?.window?.getCurrentWindow) {
@@ -128,6 +115,8 @@ navItems.forEach(item => {
     if (targetView) {
       targetView.classList.add('active');
     }
+    if (viewId === 'home') loadHomeStats();
+    if (viewId === 'statistics') loadStatistics();
   });
 });
 
@@ -138,6 +127,7 @@ function getSystemTheme() {
 
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('brainsprint-theme', theme); } catch(e) {}
 }
 
 function toggleTheme() {
@@ -146,10 +136,13 @@ function toggleTheme() {
   setTheme(next);
 }
 
-setTheme(getSystemTheme());
+const savedTheme = (() => { try { return localStorage.getItem('brainsprint-theme'); } catch(e) { return null; } })();
+setTheme(savedTheme || getSystemTheme());
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  setTheme(e.matches ? 'dark' : 'light');
+  if (!localStorage.getItem('brainsprint-theme')) {
+    setTheme(e.matches ? 'dark' : 'light');
+  }
 });
 
 document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
@@ -165,6 +158,35 @@ const session = {
   currentMs: 5000,
   lastCount: { words: 0, chars: 0, wpm: 0, time: 0 },
 };
+let lastSessionData = null;
+let recoveryTimer = null;
+
+function startRecoveryAutoSave(textarea) {
+  stopRecoveryAutoSave();
+  recoveryTimer = setInterval(async () => {
+    if (!session.active) return;
+    const content = textarea.value;
+    if (content.trim() && window.__TAURI__?.core?.invoke) {
+      try {
+        await window.__TAURI__.core.invoke('save_recovery_draft', { content });
+      } catch (e) {}
+    }
+  }, 30000); // every 30s
+}
+
+function stopRecoveryAutoSave() {
+  if (recoveryTimer) {
+    clearInterval(recoveryTimer);
+    recoveryTimer = null;
+  }
+}
+
+function clearRecoveryDraft() {
+  stopRecoveryAutoSave();
+  if (window.__TAURI__?.core?.invoke) {
+    window.__TAURI__.core.invoke('clear_recovery_draft').catch(() => {});
+  }
+}
 
 // ========== Shared Utilities ==========
 function countWords(text) {
@@ -187,6 +209,7 @@ function formatTime(sec) {
 }
 
 function showSessionComplete(time, words, wpm, chars) {
+  lastSessionData = { time, words, wpm, chars, topic: currentTopic || null };
   document.getElementById('sc-stat-time').textContent = formatTime(time);
   document.getElementById('sc-stat-words').textContent = words.toLocaleString();
   document.getElementById('sc-stat-wpm').textContent = wpm;
@@ -202,6 +225,7 @@ function showSessionComplete(time, words, wpm, chars) {
     subtitleEl.textContent = 'Your writing was lost. Keep practicing to survive longer!';
     saveBtn.style.display = 'none';
     badge.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    autoSaveStats();
   } else {
     titleEl.textContent = 'Session Complete!';
     subtitleEl.textContent = 'Great job! Keep pushing forward.';
@@ -262,6 +286,8 @@ function beginSurvivalSession() {
   survivalProgressFill.style.width = '100%';
   updateSStatsDisplay(0, 0, 0, 0);
 
+  document.getElementById('s-game-info').textContent = 'Survival Mode  •  5s countdown';
+
   session.countdownTimer = setInterval(tickSurvivalCountdown, 100);
   session.statsTimer = setInterval(updateSurvivalStats, 500);
 
@@ -269,6 +295,7 @@ function beginSurvivalSession() {
 }
 
 function endSurvival() {
+  if (!session.active) return;
   session.active = false;
   clearInterval(session.countdownTimer);
   clearInterval(session.statsTimer);
@@ -360,39 +387,63 @@ const cStatWpm = document.getElementById('c-stat-wpm');
 const cStatTime = document.getElementById('c-stat-time');
 const cTopicEl = document.getElementById('creative-prompt-topic');
 const cPromptEl = document.getElementById('creative-prompt-text');
-const cTimerOpts = document.querySelectorAll('#creative-setup .timer-opt');
+const cCdOpts = document.getElementById('creative-cd-display').parentElement.querySelectorAll('.timer-opt');
+const cTmOpts = document.getElementById('creative-tm-display').parentElement.querySelectorAll('.timer-opt');
 const cPromptCard = document.getElementById('creative-prompt-card');
-const cTimerDisplay = document.getElementById('creative-timer-display');
+const cCdDisplay = document.getElementById('creative-cd-display');
+const cTmDisplay = document.getElementById('creative-tm-display');
+const cSessionTimer = document.getElementById('creative-session-timer');
+const cGameInfo = document.getElementById('c-game-info');
 let creativeShowTopic = true;
 
-let creativeTimerMinutes = 10;
-let creativeRemainingSec = null;
-let creativeCountdownTimer = null;
+let creativeCdSec = 5;        // countdown seconds (per-keystroke)
+let creativeTmMin = 10;       // timer minutes (session limit)
+let creativeCdMs = 5000;      // countdown in ms (current)
+let creativeCdMaxMs = 5000;   // countdown max ms
+let creativeTmRemSec = null;  // timer remaining seconds
+let creativeCdTimer = null;   // countdown interval
+let creativeTmTimer = null;   // timer interval
 let creativeStatsTimer = null;
 
-cTimerOpts.forEach(btn => {
+cCdOpts.forEach(btn => {
   btn.addEventListener('click', () => {
     if (session.active) return;
-    cTimerOpts.forEach(b => b.classList.remove('active'));
+    cCdOpts.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    creativeTimerMinutes = parseInt(btn.dataset.seconds, 10);
-    updateCreativeTimerDisplay();
+    creativeCdSec = parseInt(btn.dataset.seconds, 10);
+    creativeCdMaxMs = creativeCdSec * 1000;
+    updateCreativeCdDisplay();
   });
 });
 
-function updateCreativeTimerDisplay() {
-  if (creativeRemainingSec !== null) {
-    const m = Math.floor(creativeRemainingSec / 60);
-    const s = creativeRemainingSec % 60;
-    cTimerDisplay.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  } else if (creativeTimerMinutes > 0) {
-    cTimerDisplay.textContent = String(creativeTimerMinutes).padStart(2, '0') + ':00';
+cTmOpts.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (session.active) return;
+    cTmOpts.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    creativeTmMin = parseInt(btn.dataset.seconds, 10);
+    updateCreativeTmDisplay();
+  });
+});
+
+function updateCreativeCdDisplay() {
+  if (creativeCdSec > 0) {
+    cCdDisplay.textContent = String(creativeCdSec).padStart(2, '0') + ':00';
   } else {
-    cTimerDisplay.textContent = '--:--';
+    cCdDisplay.textContent = '--:--';
+  }
+}
+
+function updateCreativeTmDisplay() {
+  if (creativeTmMin > 0) {
+    cTmDisplay.textContent = String(creativeTmMin).padStart(2, '0') + ':00';
+  } else {
+    cTmDisplay.textContent = '--:--';
   }
 }
 
 function startCreative() {
+  applyPrefsToSetup();
   pickFreshPrompt();
   session.mode = 'creative';
   session.active = false;
@@ -405,8 +456,10 @@ function startCreative() {
   cTopicEl.textContent = currentTopic || 'Free Writing';
   cPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
   cPromptCard.classList.remove('hidden');
-  creativeRemainingSec = null;
-  updateCreativeTimerDisplay();
+  creativeTmRemSec = null;
+  updateCreativeCdDisplay();
+  updateCreativeTmDisplay();
+  cTimerEl.textContent = '--:--';
 
   document.body.classList.add('creativing');
   creativeView.classList.add('active');
@@ -421,30 +474,112 @@ function beginCreativeSession() {
   cSetup.classList.add('hidden');
   cActive.classList.remove('hidden');
 
-  if (creativeTimerMinutes > 0) {
-    creativeRemainingSec = creativeTimerMinutes * 60;
+  if (creativeCdSec > 0) {
+    creativeCdMs = creativeCdSec * 1000;
+    creativeCdMaxMs = creativeCdMs;
   } else {
-    creativeRemainingSec = null;
+    creativeCdMs = 0;
+    creativeCdMaxMs = 0;
   }
-  updateCreativeTimerDisplay();
-  cTimerEl.textContent = cTimerDisplay.textContent;
-  cTimerSubEl.textContent = 'Write freely...';
-  cProgressFill.style.width = '100%';
+
+  if (creativeTmMin > 0) {
+    creativeTmRemSec = creativeTmMin * 60;
+  } else {
+    creativeTmRemSec = null;
+  }
+
+  cTimerEl.textContent = formatCountdown(creativeCdMaxMs || 0);
+  cTimerSubEl.textContent = 'Keep writing...';
+  cProgressFill.style.width = creativeCdMaxMs > 0 ? '100%' : '0%';
+  if (creativeTmRemSec !== null) {
+    cSessionTimer.textContent = 'Timer: ' + formatTime(creativeTmRemSec) + ' remaining';
+  } else {
+    cSessionTimer.textContent = '';
+  }
   updateCStatsDisplay(0, 0, 0, 0);
 
-  if (creativeRemainingSec !== null) {
-    creativeCountdownTimer = setInterval(tickCreativeCountdown, 1000);
+  // Set game info
+  const diffMap = { 0: 'Off', 10: 'Easy', 5: 'Normal', 3: 'Hard' };
+  cGameInfo.textContent = 'Creative Mode  \u2022  Difficulty: ' + (diffMap[creativeCdSec] || 'Off') + '  \u2022  Timer: ' + (creativeTmMin > 0 ? creativeTmMin + 'm' : 'Off');
+
+  if (creativeCdMaxMs > 0) {
+    creativeCdTimer = setInterval(tickCreativeCd, 100);
+  }
+  if (creativeTmRemSec !== null) {
+    creativeTmTimer = setInterval(tickCreativeTm, 1000);
   }
   creativeStatsTimer = setInterval(updateCreativeStats, 500);
 
   setTimeout(() => cTextarea.focus(), 100);
+  startRecoveryAutoSave(cTextarea);
+}
+
+function tickCreativeCd() {
+  if (!session.active || session.mode !== 'creative') return;
+  if (creativeCdMaxMs <= 0) return;
+  creativeCdMs -= 100;
+  if (creativeCdMs <= 0) {
+    creativeCdMs = 0;
+    cTimerEl.textContent = '00:00';
+    cProgressFill.style.width = '0%';
+    clearInterval(creativeCdTimer);
+    creativeCdTimer = null;
+    clearInterval(creativeTmTimer);
+    creativeTmTimer = null;
+    endCreative();
+    return;
+  }
+  cTimerEl.textContent = formatCountdown(creativeCdMs);
+  const pct = (creativeCdMs / creativeCdMaxMs) * 100;
+  cProgressFill.style.width = pct + '%';
+  updateCreativeSessionTimer();
+}
+
+function updateCreativeSessionTimer() {
+  if (creativeTmRemSec !== null && creativeTmRemSec > 0) {
+    cSessionTimer.textContent = 'Timer: ' + formatTime(creativeTmRemSec) + ' remaining';
+  } else if (creativeTmRemSec !== null && creativeTmRemSec === 0) {
+    cSessionTimer.textContent = 'Timer: 00:00';
+  } else {
+    cSessionTimer.textContent = '';
+  }
+}
+
+function resetCreativeCd() {
+  if (!session.active || session.mode !== 'creative') return;
+  if (creativeCdMaxMs <= 0) return;
+  creativeCdMs = creativeCdMaxMs;
+  cTimerEl.textContent = formatCountdown(creativeCdMaxMs);
+  cProgressFill.style.width = '100%';
+  updateCreativeSessionTimer();
+}
+
+function tickCreativeTm() {
+  if (!session.active || session.mode !== 'creative') return;
+  if (creativeTmRemSec === null) return;
+  creativeTmRemSec -= 1;
+  if (creativeTmRemSec <= 0) {
+    creativeTmRemSec = 0;
+    clearInterval(creativeCdTimer);
+    creativeCdTimer = null;
+    clearInterval(creativeTmTimer);
+    creativeTmTimer = null;
+    endCreative();
+    return;
+  }
+  updateCreativeSessionTimer();
 }
 
 function endCreative() {
+  if (!session.active) return;
   session.active = false;
-  if (creativeCountdownTimer) {
-    clearInterval(creativeCountdownTimer);
-    creativeCountdownTimer = null;
+  if (creativeCdTimer) {
+    clearInterval(creativeCdTimer);
+    creativeCdTimer = null;
+  }
+  if (creativeTmTimer) {
+    clearInterval(creativeTmTimer);
+    creativeTmTimer = null;
   }
   clearInterval(creativeStatsTimer);
   cTextarea.disabled = true;
@@ -459,27 +594,6 @@ function endCreative() {
   creativeView.classList.remove('active');
 
   showSessionComplete(elapsed, words, wpm, chars);
-}
-
-function tickCreativeCountdown() {
-  if (!session.active || session.mode !== 'creative') return;
-  if (creativeRemainingSec === null) return;
-  creativeRemainingSec -= 1;
-  if (creativeRemainingSec <= 0) {
-    creativeRemainingSec = 0;
-    updateCreativeTimerDisplay();
-    cTimerEl.textContent = '00:00';
-    cProgressFill.style.width = '0%';
-    clearInterval(creativeCountdownTimer);
-    creativeCountdownTimer = null;
-    endCreative();
-    return;
-  }
-  updateCreativeTimerDisplay();
-  cTimerEl.textContent = cTimerDisplay.textContent;
-  const total = creativeTimerMinutes * 60;
-  const pct = (creativeRemainingSec / total) * 100;
-  cProgressFill.style.width = pct + '%';
 }
 
 function updateCreativeStats() {
@@ -501,6 +615,7 @@ function updateCStatsDisplay(words, chars, wpm, elapsed) {
 
 // Creative events
 cBeginBtn.addEventListener('click', beginCreativeSession);
+cTextarea.addEventListener('input', resetCreativeCd);
 document.getElementById('creative-end-btn').addEventListener('click', endCreative);
 document.getElementById('creative-leave-btn').addEventListener('click', () => {
   if (session.active && session.mode === 'creative') showLeaveConfirm();
@@ -551,20 +666,25 @@ document.getElementById('leave-stay-btn').addEventListener('click', () => {
 
 document.getElementById('leave-leave-btn').addEventListener('click', () => {
   hideLeaveConfirm();
+  clearRecoveryDraft();
   session.active = false;
   clearInterval(session.countdownTimer);
   clearInterval(session.statsTimer);
-  if (creativeCountdownTimer) {
-    clearInterval(creativeCountdownTimer);
-    creativeCountdownTimer = null;
+  if (creativeCdTimer) {
+    clearInterval(creativeCdTimer);
+    creativeCdTimer = null;
+  }
+  if (creativeTmTimer) {
+    clearInterval(creativeTmTimer);
+    creativeTmTimer = null;
   }
   if (creativeStatsTimer) {
     clearInterval(creativeStatsTimer);
     creativeStatsTimer = null;
   }
-  if (practiceCountdownTimer) {
-    clearInterval(practiceCountdownTimer);
-    practiceCountdownTimer = null;
+  if (practiceTmTimer) {
+    clearInterval(practiceTmTimer);
+    practiceTmTimer = null;
   }
   if (practiceStatsTimer) {
     clearInterval(practiceStatsTimer);
@@ -583,6 +703,7 @@ document.getElementById('leave-leave-btn').addEventListener('click', () => {
 const scOverlay = document.getElementById('session-complete-overlay');
 
 document.getElementById('sc-close-btn').addEventListener('click', () => {
+  clearRecoveryDraft();
   scOverlay.classList.remove('active');
   navItems.forEach(n => n.classList.remove('active'));
   document.querySelector('.nav-item[data-view="home"]')?.classList.add('active');
@@ -598,13 +719,70 @@ document.getElementById('sc-redo-btn').addEventListener('click', () => {
 });
 
 document.getElementById('sc-discard-btn').addEventListener('click', () => {
+  clearRecoveryDraft();
   scOverlay.classList.remove('active');
   document.querySelector('.nav-item[data-view="home"]')?.click();
 });
 
-// Save is placeholder for Milestone 8
-document.getElementById('sc-save-btn').addEventListener('click', () => {
+// Recovery overlay
+document.getElementById('recovery-discard-btn').addEventListener('click', () => {
+  document.getElementById('recovery-overlay').classList.remove('active');
+  clearRecoveryDraft();
+});
+
+// Auto-save stats without writing content (used by survival mode)
+async function autoSaveStats() {
+  if (!lastSessionData || !window.__TAURI__?.core?.invoke) return;
+  try {
+    await window.__TAURI__.core.invoke('save_session', {
+      mode: 'survival',
+      topic: null,
+      difficulty: null,
+      durationSecs: Math.min(lastSessionData.time, 86400),
+      words: lastSessionData.words,
+      characters: lastSessionData.chars,
+      wpm: lastSessionData.wpm,
+      survived: false,
+      writingContent: null,
+    });
+  } catch (e) {
+    console.error('Auto-save failed:', e);
+  }
+}
+
+document.getElementById('sc-save-btn').addEventListener('click', async () => {
+  if (!lastSessionData) return;
+  const mode = session.mode;
+  const textareaMap = { survival: sTextarea, creative: cTextarea, practice: pTextarea };
+  const content = textareaMap[mode]?.value || '';
+  const diffMap = { 0: null, 10: 'Easy', 5: 'Normal', 3: 'Hard' };
+  const difficulty = mode === 'creative' ? diffMap[creativeCdSec] : null;
+  const survived = mode !== 'survival' || false;
+
+  if (window.__TAURI__?.core?.invoke) {
+    try {
+      await window.__TAURI__.core.invoke('save_session', {
+        mode,
+        topic: lastSessionData.topic,
+        difficulty,
+        durationSecs: Math.min(lastSessionData.time, 86400),
+        words: lastSessionData.words,
+        characters: lastSessionData.chars,
+        wpm: lastSessionData.wpm,
+        survived,
+        writingContent: (mode !== 'survival' && content.trim()) ? content : null,
+      });
+      clearRecoveryDraft();
+    } catch (e) {
+      console.error('Save failed:', e);
+      alert('Failed to save: ' + e);
+      return;
+    }
+  }
+
   scOverlay.classList.remove('active');
+  // Brief success feedback
+  document.querySelector('.nav-item[data-view="home"]')?.click();
 });
 
 // ========== Prompts ==========
@@ -731,54 +909,56 @@ const practiceView = document.getElementById('practice-view');
 const pTextarea = document.getElementById('practice-textarea');
 const pTopicEl = document.getElementById('practice-prompt-topic');
 const pPromptEl = document.getElementById('practice-prompt-text');
-const pTimerDisplay = document.getElementById('practice-timer-display');
+const pSetup = document.getElementById('practice-setup');
+const pActive = document.getElementById('practice-active');
+const pSessionTimer = document.getElementById('practice-timer-display');
 const pStatWords = document.getElementById('p-stat-words');
 const pStatChars = document.getElementById('p-stat-chars');
 const pStatWpm = document.getElementById('p-stat-wpm');
 const pStatTime = document.getElementById('p-stat-time');
-const pTimerOpts = document.querySelectorAll('#practice-body .timer-opt');
+const pTmOpts = document.querySelectorAll('#practice-setup .timer-opt');
 const pBeginBtn = document.getElementById('practice-begin-btn');
 
-let practiceTimerMinutes = 10;
-let practiceRemainingSec = null;
-let practiceCountdownTimer = null;
+let practiceTmMin = 10;
+let practiceTmRemSec = null;
+let practiceTmTimer = null;
 let practiceStatsTimer = null;
 
-pTimerOpts.forEach(btn => {
+pTmOpts.forEach(btn => {
   btn.addEventListener('click', () => {
     if (session.active) return;
-    pTimerOpts.forEach(b => b.classList.remove('active'));
+    pTmOpts.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    practiceTimerMinutes = parseInt(btn.dataset.seconds, 10);
-    updatePracticeTimerDisplay();
+    practiceTmMin = parseInt(btn.dataset.seconds, 10);
+    updatePracticeTmDisplay();
   });
 });
 
-function updatePracticeTimerDisplay() {
-  if (practiceRemainingSec !== null) {
-    const m = Math.floor(practiceRemainingSec / 60);
-    const s = practiceRemainingSec % 60;
-    pTimerDisplay.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  } else if (practiceTimerMinutes > 0) {
-    pTimerDisplay.textContent = String(practiceTimerMinutes).padStart(2, '0') + ':00';
+function updatePracticeTmDisplay() {
+  const el = document.getElementById('practice-tm-display');
+  if (practiceTmMin > 0) {
+    el.textContent = String(practiceTmMin).padStart(2, '0') + ':00';
   } else {
-    pTimerDisplay.textContent = '--:--';
+    el.textContent = '--:--';
   }
 }
 
 function startPractice() {
+  applyPrefsToSetup();
   pickFreshPrompt();
   session.mode = 'practice';
   session.active = false;
 
   pTextarea.value = '';
   pTextarea.disabled = true;
-  pBeginBtn.classList.remove('hidden');
+  pSetup.classList.remove('hidden');
+  pActive.classList.add('hidden');
   pTopicEl.textContent = currentTopic || 'Free Writing';
   pPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
-
-  practiceRemainingSec = null;
-  updatePracticeTimerDisplay();
+  document.getElementById('practice-prompt-card').classList.remove('hidden');
+  practiceTmRemSec = null;
+  updatePracticeTmDisplay();
+  pSessionTimer.textContent = '';
 
   document.body.classList.add('practicing');
   practiceView.classList.add('active');
@@ -790,36 +970,41 @@ function beginPracticeSession() {
   session.startTime = Date.now();
 
   pTextarea.disabled = false;
-  pBeginBtn.classList.add('hidden');
+  pSetup.classList.add('hidden');
+  pActive.classList.remove('hidden');
 
-  if (practiceTimerMinutes > 0) {
-    practiceRemainingSec = practiceTimerMinutes * 60;
+  document.getElementById('p-game-info').textContent = 'Practice Mode  •  Timer: ' + (practiceTmMin > 0 ? practiceTmMin + 'm' : 'Off');
+
+  if (practiceTmMin > 0) {
+    practiceTmRemSec = practiceTmMin * 60;
+    pSessionTimer.textContent = 'Timer: ' + formatTime(practiceTmRemSec) + ' remaining';
   } else {
-    practiceRemainingSec = null;
+    practiceTmRemSec = null;
+    pSessionTimer.textContent = '';
   }
-  updatePracticeTimerDisplay();
 
-  if (practiceRemainingSec !== null) {
-    practiceCountdownTimer = setInterval(tickPracticeCountdown, 1000);
+  if (practiceTmRemSec !== null) {
+    practiceTmTimer = setInterval(tickPracticeTm, 1000);
   }
   practiceStatsTimer = setInterval(updatePStats, 500);
 
   setTimeout(() => pTextarea.focus(), 100);
+  startRecoveryAutoSave(pTextarea);
 }
 
-function tickPracticeCountdown() {
+function tickPracticeTm() {
   if (!session.active || session.mode !== 'practice') return;
-  if (practiceRemainingSec === null) return;
-  practiceRemainingSec -= 1;
-  if (practiceRemainingSec <= 0) {
-    practiceRemainingSec = 0;
-    updatePracticeTimerDisplay();
-    clearInterval(practiceCountdownTimer);
-    practiceCountdownTimer = null;
+  if (practiceTmRemSec === null) return;
+  practiceTmRemSec -= 1;
+  if (practiceTmRemSec <= 0) {
+    practiceTmRemSec = 0;
+    pSessionTimer.textContent = 'Timer: 00:00';
+    clearInterval(practiceTmTimer);
+    practiceTmTimer = null;
     endPractice();
     return;
   }
-  updatePracticeTimerDisplay();
+  pSessionTimer.textContent = 'Timer: ' + formatTime(practiceTmRemSec) + ' remaining';
 }
 
 function updatePStats() {
@@ -840,10 +1025,11 @@ function updatePStatsDisplay(words, chars, wpm, elapsed) {
 }
 
 function endPractice() {
+  if (!session.active) return;
   session.active = false;
-  if (practiceCountdownTimer) {
-    clearInterval(practiceCountdownTimer);
-    practiceCountdownTimer = null;
+  if (practiceTmTimer) {
+    clearInterval(practiceTmTimer);
+    practiceTmTimer = null;
   }
   clearInterval(practiceStatsTimer);
   pTextarea.disabled = true;
@@ -867,15 +1053,24 @@ document.getElementById('practice-new-prompt-btn').addEventListener('click', () 
   pTopicEl.textContent = currentTopic || 'Free Writing';
   pPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
 });
-document.getElementById('practice-end-btn').addEventListener('click', () => {
-  if (session.active) endPractice();
-});
+document.getElementById('practice-end-btn').addEventListener('click', endPractice);
 document.getElementById('practice-leave-btn').addEventListener('click', () => {
   if (session.active) {
     showLeaveConfirm();
   } else {
     document.body.classList.remove('practicing');
     practiceView.classList.remove('active');
+  }
+});
+document.getElementById('practice-toggle-topic-btn').addEventListener('click', () => {
+  if (session.active) return;
+  const card = document.getElementById('practice-prompt-card');
+  const btn = document.getElementById('practice-toggle-topic-btn');
+  const hidden = card.classList.toggle('hidden');
+  if (hidden) {
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Show Topic';
+  } else {
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Hide Topic';
   }
 });
 
@@ -893,5 +1088,423 @@ document.querySelector('.start-practice-btn')?.addEventListener('click', () => {
   startPractice();
 });
 
+// ========== Settings ==========
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem('brainsprint-prefs');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function savePrefs(prefs) {
+  try {
+    const existing = loadPrefs();
+    Object.assign(existing, prefs);
+    localStorage.setItem('brainsprint-prefs', JSON.stringify(existing));
+  } catch(e) {}
+}
+
+function applyPrefsToSetup() {
+  const prefs = loadPrefs();
+
+  // Creative difficulty
+  if (prefs.creativeDiff !== undefined) {
+    creativeCdSec = prefs.creativeDiff;
+    creativeCdMaxMs = creativeCdSec * 1000;
+    cCdOpts.forEach(b => b.classList.remove('active'));
+    cCdOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === prefs.creativeDiff) b.classList.add('active'); });
+    updateCreativeCdDisplay();
+  }
+  // Creative timer
+  if (prefs.creativeTimer !== undefined) {
+    creativeTmMin = prefs.creativeTimer;
+    cTmOpts.forEach(b => b.classList.remove('active'));
+    cTmOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === prefs.creativeTimer) b.classList.add('active'); });
+    updateCreativeTmDisplay();
+  }
+  // Practice timer
+  if (prefs.practiceTimer !== undefined) {
+    practiceTmMin = prefs.practiceTimer;
+    pTmOpts.forEach(b => b.classList.remove('active'));
+    pTmOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === prefs.practiceTimer) b.classList.add('active'); });
+    updatePracticeTmDisplay();
+  }
+}
+
+// Save preferences when setup options change
+cCdOpts.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (session.active) return;
+    savePrefs({ creativeDiff: parseInt(btn.dataset.seconds, 10) });
+  });
+});
+cTmOpts.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (session.active) return;
+    savePrefs({ creativeTimer: parseInt(btn.dataset.seconds, 10) });
+  });
+});
+pTmOpts.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (session.active) return;
+    savePrefs({ practiceTimer: parseInt(btn.dataset.seconds, 10) });
+  });
+});
+
+// Settings page UI
+document.getElementById('settings-theme-btn').addEventListener('click', () => {
+  toggleTheme();
+  updateSettingsThemeUI();
+});
+
+function updateSettingsThemeUI() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  document.getElementById('settings-theme-label').textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+  document.getElementById('settings-theme-icon').innerHTML = theme === 'dark'
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+
+document.getElementById('settings-creative-diff').addEventListener('change', (e) => {
+  const val = parseInt(e.target.value, 10);
+  savePrefs({ creativeDiff: val });
+  // Also update the setup buttons if creative setup is visible
+  creativeCdSec = val;
+  creativeCdMaxMs = val * 1000;
+  cCdOpts.forEach(b => b.classList.remove('active'));
+  cCdOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === val) b.classList.add('active'); });
+  updateCreativeCdDisplay();
+});
+
+document.getElementById('settings-creative-timer').addEventListener('change', (e) => {
+  const val = parseInt(e.target.value, 10);
+  savePrefs({ creativeTimer: val });
+  creativeTmMin = val;
+  cTmOpts.forEach(b => b.classList.remove('active'));
+  cTmOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === val) b.classList.add('active'); });
+  updateCreativeTmDisplay();
+});
+
+document.getElementById('settings-practice-timer').addEventListener('change', (e) => {
+  const val = parseInt(e.target.value, 10);
+  savePrefs({ practiceTimer: val });
+  practiceTmMin = val;
+  pTmOpts.forEach(b => b.classList.remove('active'));
+  pTmOpts.forEach(b => { if (parseInt(b.dataset.seconds, 10) === val) b.classList.add('active'); });
+  updatePracticeTmDisplay();
+});
+
+// Data management
+document.getElementById('settings-export-btn').addEventListener('click', () => {
+  const data = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('brainsprint-')) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+  } catch(e) {}
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'brainsprint-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('settings-import-btn').addEventListener('click', () => {
+  document.getElementById('settings-file-input').click();
+});
+
+document.getElementById('settings-file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      Object.keys(data).forEach(key => {
+        if (key.startsWith('brainsprint-')) {
+          localStorage.setItem(key, data[key]);
+        }
+      });
+      alert('Data imported successfully. Reload to apply.');
+    } catch(err) {
+      alert('Invalid backup file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('settings-clear-btn').addEventListener('click', () => {
+  if (!confirm('Are you sure you want to clear all saved data? This cannot be undone.')) return;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('brainsprint-')) keys.push(k);
+  }
+  keys.forEach(k => localStorage.removeItem(k));
+  // Reset to defaults
+  location.reload();
+});
+
+// Danger Zone
+document.getElementById('settings-delete-data-btn').addEventListener('click', async () => {
+  if (!confirm('Delete all saved session data and writing files? This cannot be undone.')) return;
+  if (window.__TAURI__?.core?.invoke) {
+    try {
+      await window.__TAURI__.core.invoke('delete_all_data');
+      alert('Saved data deleted.');
+    } catch (e) {
+      alert('Failed to delete data: ' + e);
+    }
+  } else {
+    alert('Data deletion is available in the desktop app.');
+  }
+});
+
+document.getElementById('settings-reset-btn').addEventListener('click', async () => {
+  if (!confirm('Reset everything to factory defaults? All saved data, files, and settings will be permanently deleted.')) return;
+  if (window.__TAURI__?.core?.invoke) {
+    try {
+      await window.__TAURI__.core.invoke('delete_all_data');
+    } catch (e) {}
+  }
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('brainsprint-')) keys.push(k);
+  }
+  keys.forEach(k => localStorage.removeItem(k));
+  location.reload();
+});
+
+// Update settings UI when view becomes active
+document.querySelector('.nav-item[data-view="settings"]').addEventListener('click', () => {
+  updateSettingsThemeUI();
+  const prefs = loadPrefs();
+  document.getElementById('settings-creative-diff').value = prefs.creativeDiff !== undefined ? prefs.creativeDiff : 5;
+  document.getElementById('settings-creative-timer').value = prefs.creativeTimer !== undefined ? prefs.creativeTimer : 10;
+  document.getElementById('settings-practice-timer').value = prefs.practiceTimer !== undefined ? prefs.practiceTimer : 10;
+  renderCustomTopics();
+  updateFolderPaths();
+});
+
+async function updateFolderPaths() {
+  if (!window.__TAURI__?.core?.invoke) return;
+  try {
+    const paths = await window.__TAURI__.core.invoke('get_display_paths');
+    document.getElementById('settings-path-base').textContent = paths[0][1];
+    document.getElementById('settings-path-writings').textContent = paths[1][1];
+    document.getElementById('settings-path-sessions').textContent = paths[2][1];
+  } catch (e) {}
+}
+
+// ========== Custom Topics ==========
+function loadCustomTopics() {
+  try {
+    const raw = localStorage.getItem('brainsprint-custom-topics');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function saveCustomTopics(topics) {
+  try {
+    localStorage.setItem('brainsprint-custom-topics', JSON.stringify(topics));
+  } catch(e) {}
+}
+
+function renderCustomTopics() {
+  const container = document.getElementById('settings-custom-topics-list');
+  const topics = loadCustomTopics();
+  const names = Object.keys(topics);
+  if (names.length === 0) {
+    container.innerHTML = '<p style="font-size:13px;color:var(--text-secondary);text-align:center;padding:12px 0;">No custom topics yet. Add one above.</p>';
+    return;
+  }
+  container.innerHTML = names.map(name => {
+    const count = topics[name].length;
+    return '<div class="custom-topic-item">' +
+      '<div><span class="custom-topic-name">' + escapeHtml(name) + '</span><span class="custom-topic-count"> (' + count + ' prompts)</span></div>' +
+      '<button class="custom-topic-delete-btn" data-topic="' + escapeHtml(name) + '">Delete</button>' +
+    '</div>';
+  }).join('');
+  container.querySelectorAll('.custom-topic-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const topic = btn.dataset.topic;
+      const topics = loadCustomTopics();
+      delete topics[topic];
+      saveCustomTopics(topics);
+      updatePromptsWithCustom();
+      renderCustomTopics();
+    });
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('settings-add-topic-btn').addEventListener('click', () => {
+  const nameInput = document.getElementById('settings-topic-name');
+  const promptsInput = document.getElementById('settings-topic-prompts');
+  const name = nameInput.value.trim();
+  const prompts = promptsInput.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  if (!name) { alert('Please enter a topic name.'); return; }
+  if (prompts.length < 3) { alert('Please enter at least 3 prompts.'); return; }
+  const topics = loadCustomTopics();
+  if (topics[name]) { alert('Topic "' + name + '" already exists.'); return; }
+  topics[name] = prompts;
+  saveCustomTopics(topics);
+  updatePromptsWithCustom();
+  renderCustomTopics();
+  nameInput.value = '';
+  promptsInput.value = '';
+});
+
+function updatePromptsWithCustom() {
+  const custom = loadCustomTopics();
+  Object.keys(custom).forEach(key => {
+    PROMPTS[key] = custom[key];
+  });
+}
+
+// Folder open buttons
+async function openAppSubdir(subdir) {
+  if (!window.__TAURI__?.core?.invoke) {
+    alert('File system access is available in the desktop app.');
+    return;
+  }
+  try {
+    await window.__TAURI__.core.invoke('open_app_folder', { subdir });
+  } catch(e) {
+    console.error('Folder open error:', e);
+    alert('Error: ' + (e.message || e));
+  }
+}
+
+document.getElementById('settings-open-writings-btn').addEventListener('click', () => openAppSubdir('writings'));
+document.getElementById('settings-open-sessions-btn').addEventListener('click', () => openAppSubdir('sessions'));
+
+// ========== Statistics ==========
+function formatTimeLong(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+async function loadStatistics() {
+  if (!window.__TAURI__?.core?.invoke) return;
+  try {
+    const sessions = await window.__TAURI__.core.invoke('get_sessions');
+
+    const totalSessions = sessions.length;
+    const totalWords = sessions.reduce((s, x) => s + x.words, 0);
+    const totalTime = sessions.reduce((s, x) => s + x.duration_secs, 0);
+    const bestWpm = sessions.reduce((s, x) => Math.max(s, x.wpm), 0);
+
+    document.getElementById('stat-total-sessions').textContent = totalSessions;
+    document.getElementById('stat-total-words').textContent = totalWords.toLocaleString();
+    document.getElementById('stat-total-time').textContent = formatTimeLong(totalTime);
+    document.getElementById('stat-best-wpm').textContent = Math.round(bestWpm);
+
+    // Per-mode breakdown
+    const modes = { survival: { sessions: [], words: 0, wpm: 0 }, creative: { sessions: [], words: 0, wpm: 0 }, practice: { sessions: [], words: 0, wpm: 0 } };
+    sessions.forEach(s => {
+      const m = modes[s.mode];
+      if (!m) return;
+      m.sessions.push(s);
+      m.words += s.words;
+      m.wpm = Math.max(m.wpm, s.wpm);
+    });
+
+    Object.keys(modes).forEach(mode => {
+      const m = modes[mode];
+      document.getElementById('stat-' + mode + '-sessions').textContent = m.sessions.length;
+      document.getElementById('stat-' + mode + '-words').textContent = m.words.toLocaleString();
+      document.getElementById('stat-' + mode + '-wpm').textContent = Math.round(m.wpm);
+    });
+
+    // Recent sessions (last 20)
+    const recent = sessions.slice(-20).reverse();
+    const listEl = document.getElementById('stats-recent-list');
+    if (recent.length === 0) {
+      listEl.innerHTML = '<p style="font-size:13px;color:var(--text-secondary);text-align:center;padding:20px 0;">No sessions recorded yet.</p>';
+      return;
+    }
+    listEl.innerHTML = recent.map(s => {
+      const date = s.date ? new Date(s.date).toLocaleDateString() : '--';
+      const mode = s.mode || 'unknown';
+      return '<div class="stats-recent-item">' +
+        '<div class="stats-recent-left">' +
+          '<span class="stats-recent-mode-badge ' + mode + '">' + mode.charAt(0).toUpperCase() + mode.slice(1) + '</span>' +
+          '<span class="stats-recent-info">' + s.words + ' words \u2022 ' + Math.round(s.wpm) + ' wpm</span>' +
+        '</div>' +
+        '<div class="stats-recent-meta">' +
+          '<span>' + formatTimeLong(s.duration_secs) + '</span>' +
+          '<span class="stats-recent-date">' + date + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    console.error('Failed to load statistics:', e);
+  }
+}
+
+// ========== Home Stats ==========
+async function loadHomeStats() {
+  if (!window.__TAURI__?.core?.invoke) return;
+  try {
+    const stats = await window.__TAURI__.core.invoke('get_lifetime_stats');
+    const maxReasonable = 86400; // 24 hours — anything above is corrupt
+    const longest = stats.longest_session_secs <= maxReasonable ? stats.longest_session_secs : 0;
+    document.getElementById('home-longest-session').textContent = longest > 0 ? formatTime(longest) : '--';
+    document.getElementById('home-most-words').textContent = stats.most_words_session > 0 ? stats.most_words_session.toLocaleString() : '--';
+    document.getElementById('home-highest-wpm').textContent = stats.highest_wpm > 0 ? Math.round(stats.highest_wpm) : '--';
+    document.getElementById('home-total-sessions').textContent = stats.total_sessions;
+    document.getElementById('home-total-words').textContent = stats.total_words > 0 ? stats.total_words.toLocaleString() : '--';
+    const totalTime = stats.total_writing_time_secs <= maxReasonable * 365 ? stats.total_writing_time_secs : 0;
+    document.getElementById('home-total-time').textContent = totalTime > 0
+      ? Math.floor(totalTime / 3600).toString().padStart(2, '0') + ':' +
+        (Math.floor(totalTime / 60) % 60).toString().padStart(2, '0') + ':' +
+        (totalTime % 60).toString().padStart(2, '0')
+      : '--';
+  } catch (e) {
+    console.error('Failed to load stats:', e);
+  }
+}
+
 // ========== Startup ==========
-console.log('BrainSprint v1.0 — running in', document.documentElement.getAttribute('data-theme'), 'mode');
+updatePromptsWithCustom();
+applyPrefsToSetup();
+loadHomeStats();
+loadStatistics();
+
+async function checkRecoveryDraft() {
+  if (!window.__TAURI__?.core?.invoke) return;
+  try {
+    const content = await window.__TAURI__.core.invoke('load_recovery_draft');
+    if (content) {
+      document.getElementById('recovery-overlay').classList.add('active');
+      // Store recovered content for use on Restore
+      window.__recoveredContent = content;
+    }
+  } catch (e) {}
+}
+
+document.getElementById('recovery-restore-btn').addEventListener('click', () => {
+  document.getElementById('recovery-overlay').classList.remove('active');
+  const content = window.__recoveredContent;
+  if (!content) return;
+  window.__recoveredContent = null;
+  clearRecoveryDraft();
+  startCreative();
+  cTextarea.value = content;
+});
+
+checkRecoveryDraft();
+console.log('BrainSprint v0.1.0 — running in', document.documentElement.getAttribute('data-theme'), 'mode');

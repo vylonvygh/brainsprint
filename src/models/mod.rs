@@ -27,6 +27,21 @@ pub struct LifetimeStats {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SavedSession {
+    pub id: String,
+    pub mode: String,
+    pub date: String,
+    pub duration_secs: u64,
+    pub words: u64,
+    pub characters: u64,
+    pub wpm: f64,
+    pub topic: Option<String>,
+    pub difficulty: Option<String>,
+    pub survived: bool,
+    pub writing_filename: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
     pub follow_system_theme: bool,
     pub theme: String, // "light" or "dark"

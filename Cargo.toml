@@ -1,6 +1,6 @@
 [package]
 name = "brainsprint"
-version = "1.0.0"
+version = "0.1.0"
 description = "A minimal writing sprint application for focused thinking and flow."
 authors = ["Andre Joseph"]
 edition = "2021"

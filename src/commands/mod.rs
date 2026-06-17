@@ -1,3 +1,7 @@
+mod persist;
+
+pub use persist::*;
+
 #[tauri::command]
 pub fn minimize_window(window: tauri::WebviewWindow) -> Result<(), String> {
     window.minimize().map_err(|e| e.to_string())

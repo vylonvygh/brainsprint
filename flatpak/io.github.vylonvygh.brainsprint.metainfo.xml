@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.vylonvygh.brainsprint</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>BrainSprint</name>
+  <summary>A minimal writing sprint application for focused thinking and flow.</summary>
+  <description>
+    <p>
+      BrainSprint is a privacy-respecting, local-first writing sprint desktop app.
+      Practice timed writing sessions with three game modes:
+    </p>
+    <ul>
+      <li>Survival — Keep typing or lose progress</li>
+      <li>Creative — Write with a prompt and difficulty settings</li>
+      <li>Practice — Free writing with optional timer</li>
+    </ul>
+    <p>
+      All data stays on your machine — no accounts, no telemetry, no cloud.
+    </p>
+  </description>
+  <developer id="io.github.vylonvygh">
+    <name>Andre Joseph</name>
+  </developer>
+  <url type="homepage">https://github.com/vylonvygh/brainsprint</url>
+  <url type="bugtracker">https://github.com/vylonvygh/brainsprint/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/vylonvygh/brainsprint/main/screenshots/home.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-06-17"/>
+  </releases>
+  <launchable type="desktop-id">io.github.vylonvygh.brainsprint.desktop</launchable>
+</component>
