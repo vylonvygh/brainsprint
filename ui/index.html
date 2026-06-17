@@ -309,17 +309,17 @@
             </div>
 
             <div class="setup-timer-bar">
-              <span class="setup-timer-label">Countdown:</span>
+              <span class="setup-timer-label">Timer:</span>
               <div class="setup-timer-options">
-                <button class="timer-opt" data-seconds="3">3s</button>
-                <button class="timer-opt active" data-seconds="5">5s</button>
-                <button class="timer-opt" data-seconds="10">10s</button>
-                <button class="timer-opt" data-seconds="15">15s</button>
-                <button class="timer-opt" data-seconds="30">30s</button>
+                <button class="timer-opt" data-seconds="0">Off</button>
+                <button class="timer-opt" data-seconds="5">5m</button>
+                <button class="timer-opt active" data-seconds="10">10m</button>
+                <button class="timer-opt" data-seconds="15">15m</button>
+                <button class="timer-opt" data-seconds="30">30m</button>
               </div>
+              <span id="creative-timer-display" class="setup-timer-display">--:--</span>
             </div>
 
-            <p class="setup-card-warning">⚠ Writing is deleted when the timer runs out.</p>
             <button id="creative-begin-btn" class="btn-primary begin-btn">Begin Creative</button>
           </div>
         </div>
@@ -339,19 +339,19 @@
           <div id="creative-stats">
             <div class="survival-stat">
               <span class="survival-stat-label">Words</span>
-              <span class="survival-stat-value" id="c-s-stat-words">0</span>
+              <span class="survival-stat-value" id="c-stat-words">0</span>
             </div>
             <div class="survival-stat">
               <span class="survival-stat-label">Characters</span>
-              <span class="survival-stat-value" id="c-s-stat-chars">0</span>
+              <span class="survival-stat-value" id="c-stat-chars">0</span>
             </div>
             <div class="survival-stat">
               <span class="survival-stat-label">WPM</span>
-              <span class="survival-stat-value" id="c-s-stat-wpm">0</span>
+              <span class="survival-stat-value" id="c-stat-wpm">0</span>
             </div>
             <div class="survival-stat">
               <span class="survival-stat-label">Time Elapsed</span>
-              <span class="survival-stat-value" id="c-s-stat-time">00:00</span>
+              <span class="survival-stat-value" id="c-stat-time">00:00</span>
             </div>
           </div>
         </div>
@@ -406,19 +406,19 @@
         <div id="practice-stats">
           <div class="survival-stat">
             <span class="survival-stat-label">Words</span>
-            <span class="survival-stat-value" id="p-s-stat-words">0</span>
+              <span class="survival-stat-value" id="p-stat-words">0</span>
           </div>
           <div class="survival-stat">
             <span class="survival-stat-label">Characters</span>
-            <span class="survival-stat-value" id="p-s-stat-chars">0</span>
+              <span class="survival-stat-value" id="p-stat-chars">0</span>
           </div>
           <div class="survival-stat">
             <span class="survival-stat-label">WPM</span>
-            <span class="survival-stat-value" id="p-s-stat-wpm">0</span>
+              <span class="survival-stat-value" id="p-stat-wpm">0</span>
           </div>
           <div class="survival-stat">
             <span class="survival-stat-label">Time Elapsed</span>
-            <span class="survival-stat-value" id="p-s-stat-time">00:00</span>
+              <span class="survival-stat-value" id="p-stat-time">00:00</span>
           </div>
         </div>
       </div>

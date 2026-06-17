@@ -362,10 +362,11 @@ const cTopicEl = document.getElementById('creative-prompt-topic');
 const cPromptEl = document.getElementById('creative-prompt-text');
 const cTimerOpts = document.querySelectorAll('#creative-setup .timer-opt');
 const cPromptCard = document.getElementById('creative-prompt-card');
+const cTimerDisplay = document.getElementById('creative-timer-display');
 let creativeShowTopic = true;
 
-let creativeTimeoutMs = 5000;
-let creativeCurrentMs = 5000;
+let creativeTimerMinutes = 10;
+let creativeRemainingSec = null;
 let creativeCountdownTimer = null;
 let creativeStatsTimer = null;
 
@@ -374,10 +375,22 @@ cTimerOpts.forEach(btn => {
     if (session.active) return;
     cTimerOpts.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    creativeTimeoutMs = parseInt(btn.dataset.seconds, 10) * 1000;
-    cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
+    creativeTimerMinutes = parseInt(btn.dataset.seconds, 10);
+    updateCreativeTimerDisplay();
   });
 });
+
+function updateCreativeTimerDisplay() {
+  if (creativeRemainingSec !== null) {
+    const m = Math.floor(creativeRemainingSec / 60);
+    const s = creativeRemainingSec % 60;
+    cTimerDisplay.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  } else if (creativeTimerMinutes > 0) {
+    cTimerDisplay.textContent = String(creativeTimerMinutes).padStart(2, '0') + ':00';
+  } else {
+    cTimerDisplay.textContent = '--:--';
+  }
+}
 
 function startCreative() {
   pickFreshPrompt();
@@ -392,27 +405,36 @@ function startCreative() {
   cTopicEl.textContent = currentTopic || 'Free Writing';
   cPromptEl.textContent = currentPrompt || 'Write freely about whatever comes to mind.';
   cPromptCard.classList.remove('hidden');
+  creativeRemainingSec = null;
+  updateCreativeTimerDisplay();
 
   document.body.classList.add('creativing');
   creativeView.classList.add('active');
-  updateCreativeStatsDisplay(0, 0, 0, 0);
+  updateCStatsDisplay(0, 0, 0, 0);
 }
 
 function beginCreativeSession() {
   session.active = true;
   session.startTime = Date.now();
-  creativeCurrentMs = creativeTimeoutMs;
 
   cTextarea.disabled = false;
   cSetup.classList.add('hidden');
   cActive.classList.remove('hidden');
 
-  cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
-  cTimerSubEl.textContent = 'Keep writing...';
+  if (creativeTimerMinutes > 0) {
+    creativeRemainingSec = creativeTimerMinutes * 60;
+  } else {
+    creativeRemainingSec = null;
+  }
+  updateCreativeTimerDisplay();
+  cTimerEl.textContent = cTimerDisplay.textContent;
+  cTimerSubEl.textContent = 'Write freely...';
   cProgressFill.style.width = '100%';
   updateCStatsDisplay(0, 0, 0, 0);
 
-  creativeCountdownTimer = setInterval(tickCreativeCountdown, 100);
+  if (creativeRemainingSec !== null) {
+    creativeCountdownTimer = setInterval(tickCreativeCountdown, 1000);
+  }
   creativeStatsTimer = setInterval(updateCreativeStats, 500);
 
   setTimeout(() => cTextarea.focus(), 100);
@@ -433,8 +455,6 @@ function endCreative() {
   const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
   const wpm = elapsed > 0 ? Math.round(words / (elapsed / 60)) : 0;
 
-  cTextarea.value = '';
-
   document.body.classList.remove('creativing');
   creativeView.classList.remove('active');
 
@@ -443,24 +463,23 @@ function endCreative() {
 
 function tickCreativeCountdown() {
   if (!session.active || session.mode !== 'creative') return;
-  creativeCurrentMs -= 100;
-  if (creativeCurrentMs <= 0) {
-    creativeCurrentMs = 0;
+  if (creativeRemainingSec === null) return;
+  creativeRemainingSec -= 1;
+  if (creativeRemainingSec <= 0) {
+    creativeRemainingSec = 0;
+    updateCreativeTimerDisplay();
     cTimerEl.textContent = '00:00';
     cProgressFill.style.width = '0%';
+    clearInterval(creativeCountdownTimer);
+    creativeCountdownTimer = null;
     endCreative();
     return;
   }
-  cTimerEl.textContent = formatCountdown(creativeCurrentMs);
-  const pct = (creativeCurrentMs / creativeTimeoutMs) * 100;
+  updateCreativeTimerDisplay();
+  cTimerEl.textContent = cTimerDisplay.textContent;
+  const total = creativeTimerMinutes * 60;
+  const pct = (creativeRemainingSec / total) * 100;
   cProgressFill.style.width = pct + '%';
-}
-
-function resetCreativeCountdown() {
-  if (!session.active || session.mode !== 'creative') return;
-  creativeCurrentMs = creativeTimeoutMs;
-  cTimerEl.textContent = formatCountdown(creativeTimeoutMs);
-  cProgressFill.style.width = '100%';
 }
 
 function updateCreativeStats() {
@@ -482,7 +501,6 @@ function updateCStatsDisplay(words, chars, wpm, elapsed) {
 
 // Creative events
 cBeginBtn.addEventListener('click', beginCreativeSession);
-cTextarea.addEventListener('input', resetCreativeCountdown);
 document.getElementById('creative-end-btn').addEventListener('click', endCreative);
 document.getElementById('creative-leave-btn').addEventListener('click', () => {
   if (session.active && session.mode === 'creative') showLeaveConfirm();
