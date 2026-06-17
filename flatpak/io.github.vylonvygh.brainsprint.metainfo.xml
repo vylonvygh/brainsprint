@@ -27,6 +27,15 @@
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/vylonvygh/brainsprint/main/screenshots/home.png</image>
+      <caption>Home screen</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/vylonvygh/brainsprint/main/screenshots/creative-mode.png</image>
+      <caption>Creative Mode</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/vylonvygh/brainsprint/main/screenshots/game-achivements.png</image>
+      <caption>Achievements</caption>
     </screenshot>
   </screenshots>
   <content_rating type="oars-1.1"/>
