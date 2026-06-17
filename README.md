@@ -16,9 +16,7 @@ BrainSprint is a small, fast, distraction-free desktop app built around one core
 
 No accounts. No internet required. No analytics. Nothing leaves your device, ever.
 
-## Status
 
-🚧 **Early development.** Not yet usable. Following the roadmap in [`docs/BRAINSPRINT_PRD.md`](docs/BRAINSPRINT_PRD.md). Live build progress is tracked in [`docs/PROGRESS.md`](docs/PROGRESS.md).
 
 ## Core Principles
 
