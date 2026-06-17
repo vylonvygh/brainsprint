@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/mockup-assets/app-logo.png" alt="BrainSprint logo" width="120" />
+  <img src="app-logo.png" alt="BrainSprint logo" width="120" />
 </p>
 
 <h1 align="center">BrainSprint</h1>
@@ -43,4 +43,4 @@ Linux is the primary target for v1, distributed via [Flathub](https://flathub.or
 
 ## Author
 
-Built by [Andre Joseph](https://github.com/avdrevygh) (also known as Vylon Vy).
+Built by [Andre Joseph](https://github.com/vylonvygh) (also known as Vylon Vy).
